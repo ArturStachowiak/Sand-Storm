@@ -10,7 +10,6 @@ from components.ground import Ground
 from components.terrain import Terrain
 from components.sky import Sky
 from ui.slider import Slider, draw_text
-import random
 
 # Performance settings
 FPS = 60
@@ -42,7 +41,7 @@ wind_slider = Slider(PANEL_PADDING, START_Y, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 360
 wind_strength_slider = Slider(PANEL_PADDING, START_Y + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 5.0, 2.0)
 
 # Particle parameters
-particle_count_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 5000, 1000, is_count_slider=True)
+particle_count_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 100000, 1000, is_count_slider=True)
 particle_mass_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 2.0, 1.0)
 particle_lifetime_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 1.0, 10.0, 1.0)
 
