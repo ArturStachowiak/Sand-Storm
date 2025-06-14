@@ -52,6 +52,11 @@ clock = pygame.time.Clock()
 fps = 60
 done = False
 
+# Enable mouse capture
+pygame.event.set_grab(True)
+pygame.mouse.set_visible(False)
+pygame.mouse.set_pos(screen_width // 2, screen_height // 2)
+
 while not done:
     # Handle events
     events = pygame.event.get()
@@ -60,7 +65,18 @@ while not done:
             done = True
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                pygame.mouse.set_visible(True)
+                pygame.event.set_grab(False)
                 done = True
+            elif event.key == pygame.K_SPACE:
+                # Toggle mouse capture
+                if pygame.mouse.get_visible():
+                    pygame.mouse.set_visible(False)
+                    pygame.event.set_grab(True)
+                    pygame.mouse.set_pos(screen_width // 2, screen_height // 2)
+                else:
+                    pygame.mouse.set_visible(True)
+                    pygame.event.set_grab(False)
             elif event.key == pygame.K_w:
                 # Change wind direction
                 sand_storm.set_wind(pygame.Vector3(0, 1, 0))  # Up
