@@ -22,10 +22,17 @@ class Particle:
         # Initialize velocity
         self.velocity = np.array([0.0, 0.0, 0.0])
         
-        # Initialize color with slight variation and random transparency
+        # Initialize color with slight variation and transparency based on particle count
         base_color = 0.8
         variation = random.uniform(-0.1, 0.1)
-        transparency = random.uniform(0.5, 1.0)
+        
+        # Calculate transparency based on total particle count
+        # More particles = more transparency to avoid overcrowding
+        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
+        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
+        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
+        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        
         self.color = [base_color + variation, base_color + variation, base_color + variation, transparency]
         
         # Initialize rotation
@@ -176,4 +183,25 @@ class Particle:
         ])
         self.velocity = np.array([0.0, 0.0, 0.0])
         self.age = 0
-        self.lifetime = random.uniform(0.8, 1.2) 
+        self.lifetime = random.uniform(0.8, 1.2)
+        # Update transparency based on current particle count
+        self.update_transparency()
+    
+    def update_transparency(self):
+        """Update particle transparency based on current particle count"""
+        # Calculate transparency based on total particle count
+        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
+        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
+        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
+        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        
+        # Update color with new transparency
+        self.color[3] = transparency
+        
+        # Update the color buffer with new transparency
+        for i in range(3, len(self.colors), 4):  # Update alpha channel (every 4th value)
+            self.colors[i] = transparency
+        
+        # Update the color buffer on GPU
+        glBindBuffer(GL_ARRAY_BUFFER, self.cbo)
+        glBufferData(GL_ARRAY_BUFFER, self.colors.nbytes, self.colors, GL_STATIC_DRAW) 

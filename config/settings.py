@@ -55,7 +55,7 @@ PARTICLES_PER_CLUSTER = 5  # Number of particles in each cluster
 CLUSTER_RADIUS = 0.5  # Maximum distance between particles in a cluster
 
 # Terrain settings
-TERRAIN_SIZE = 20  
-TERRAIN_RESOLUTION = 20  
-TERRAIN_HEIGHT = 1.0 
+TERRAIN_SIZE = 40  
+TERRAIN_RESOLUTION = 30
+TERRAIN_HEIGHT = 2.0 
 TERRAIN_SCALE = 0.5  

@@ -9,20 +9,103 @@ from core.SandStorm import SandStorm
 from components.ground import Ground
 from components.terrain import Terrain
 from components.sky import Sky
+from ui.slider import Slider, draw_text
 import random
 
 # Performance settings
-MAX_PARTICLES = 5000  # Increased maximum particles
-PARTICLES_PER_VERTEX = 2  # Reduced particles per vertex for better performance
-MAX_VERTICES_PER_FRAME = 30  # Reduced vertices per frame
-SAND_GENERATION_INTERVAL = 100  # Increased interval between generations
 FPS = 60
+
+# Control panel dimensions
+PANEL_WIDTH = 300
+PANEL_PADDING = 20
+SLIDER_WIDTH = 200
+SLIDER_HEIGHT = 20
+
+# Calculate dynamic spacing based on screen height
+def calculate_spacing():
+    # Get screen height from window dimensions
+    screen_height = math.fabs(window_dimensions[3] - window_dimensions[2])
+    
+    # Calculate spacing as percentages of screen height
+    slider_spacing = int(screen_height * 0.06)  # 10% of screen height
+    group_spacing = int(screen_height * 0.25)  # 25% of screen height
+    start_y = int(screen_height * 0.12)  # 12% from top
+    
+    return slider_spacing, group_spacing, start_y
+
+# Initialize spacing
+SLIDER_SPACING, GROUP_SPACING, START_Y = calculate_spacing()
+
+# Initialize sliders
+# Wind parameters
+wind_slider = Slider(PANEL_PADDING, START_Y, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 360, 0, is_wind_slider=True)
+wind_strength_slider = Slider(PANEL_PADDING, START_Y + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 5.0, 2.0)
+
+# Particle parameters
+particle_count_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 5000, 1000, is_count_slider=True)
+particle_mass_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 2.0, 1.0)
+particle_lifetime_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 1.0, 10.0, 1.0)
+
+# Visual parameters
+particle_color_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.0, 1.0, 0.5)
+sky_intensity_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 2.0, 1.0)
+
+def draw_control_panel():
+    # Disable lighting for UI elements
+    glDisable(GL_LIGHTING)
+    glDisable(GL_DEPTH_TEST)
+    
+    # Draw white background panel
+    glColor3f(1.0, 0.95, 0.9)
+    glBegin(GL_QUADS)
+    glVertex2f(0, 0)
+    glVertex2f(PANEL_WIDTH, 0)
+    glVertex2f(PANEL_WIDTH, screen_height)
+    glVertex2f(0, screen_height)
+    glEnd()
+
+    # Draw group headers and sliders
+    # Wind parameters
+    glColor3f(0.0, 0.0, 0.0)  # Black color for text
+    draw_text("Wind Parameters", PANEL_PADDING, START_Y - 40, font_size=24)
+    wind_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Wind Direction", PANEL_PADDING, START_Y - 8, font_size=18)
+    wind_strength_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Wind Strength", PANEL_PADDING, START_Y + SLIDER_SPACING - 8, font_size=18)
+
+    # Particle parameters
+    glColor3f(0.0, 0.0, 0.0)  # Black color for text
+    draw_text("Particle Parameters", PANEL_PADDING, START_Y + GROUP_SPACING - 40, font_size=24)
+    particle_count_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Particle Count", PANEL_PADDING, START_Y + GROUP_SPACING - 8, font_size=18)
+    particle_mass_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Particle Mass", PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING  - 8, font_size=18)
+    particle_lifetime_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Particle Lifetime", PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING * 2 - 8, font_size=18)
+
+    # Visual parameters
+    glColor3f(0.0, 0.0, 0.0)  # Black color for text
+    draw_text("Visual Parameters", PANEL_PADDING, START_Y + GROUP_SPACING * 2, font_size=24)
+    particle_color_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Particle Color", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING - 8, font_size=18)
+    sky_intensity_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
+    draw_text("Sky Intensity", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2 - 8, font_size=18)
+    
+    # Re-enable lighting and depth testing
+    glEnable(GL_LIGHTING)
+    glEnable(GL_DEPTH_TEST)
 
 def set_2d():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluOrtho2D(gui_dimensions[0], gui_dimensions[1],
-               gui_dimensions[3], gui_dimensions[2])
+    gluOrtho2D(0, screen_width, screen_height, 0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     glViewport(0, 0, screen.get_width(), screen.get_height())
@@ -65,16 +148,13 @@ camera = Camera(60, (screen_width / screen_height), 0.01, 1000.0)
 sky = Sky()
 
 # Create sand storm with optimized initial settings
-sand_storm = SandStorm(pygame.Vector3(0, 14, 0), num_particles=0)
+sand_storm = SandStorm(pygame.Vector3(0, 14, 0), num_particles=0, max_particles=particle_count_slider.value)
 
 # Create ground
 ground = Ground()
 
 # Create terrain
 terrain = Terrain()
-
-# Timer for continuous sand generation
-last_sand_generation = pygame.time.get_ticks()
 
 # Main game loop
 clock = pygame.time.Clock()
@@ -104,31 +184,31 @@ while not done:
                 else:
                     pygame.mouse.set_visible(True)
                     pygame.event.set_grab(False)
-            elif event.key == pygame.K_UP:
-                sand_storm.set_wind(pygame.Vector3(0, 1, 0))
-            elif event.key == pygame.K_DOWN:
-                sand_storm.set_wind(pygame.Vector3(0, -1, 0))
-            elif event.key == pygame.K_LEFT:
-                sand_storm.set_wind(pygame.Vector3(-1, 0, 0))
-            elif event.key == pygame.K_RIGHT:
-                sand_storm.set_wind(pygame.Vector3(1, 0, 0))
+        
+        # Handle slider events
+        wind_slider.handle_event(event)
+        wind_strength_slider.handle_event(event)
+        particle_count_slider.handle_event(event)
+        particle_mass_slider.handle_event(event)
+        particle_lifetime_slider.handle_event(event)
+        particle_color_slider.handle_event(event)
+        sky_intensity_slider.handle_event(event)
+        
+        # Update sand storm parameters based on slider values
+        angle = math.radians(wind_slider.value)
+        wind_direction = pygame.Vector3(math.cos(angle), 0, math.sin(angle)) * wind_strength_slider.value
+        sand_storm.set_wind(wind_direction)
+        sand_storm.set_max_particles(int(particle_count_slider.value))
 
-    # Optimized particle generation
-    current_time = pygame.time.get_ticks()
-    if current_time - last_sand_generation >= SAND_GENERATION_INTERVAL:
-        terrain_vertices = terrain.get_vertices()
         
-        if len(sand_storm.particles) < MAX_PARTICLES:
-            vertices_to_process = min(MAX_VERTICES_PER_FRAME, len(terrain_vertices) // 3)
-            vertex_indices = random.sample(range(0, len(terrain_vertices), 3), vertices_to_process)
-            
-            for i in vertex_indices:
-                if len(sand_storm.particles) >= MAX_PARTICLES:
-                    break
-                x, y, z = terrain_vertices[i:i+3]
-                sand_storm.add_particles(PARTICLES_PER_VERTEX, pygame.Vector3(x, y, z))
-        
-        last_sand_generation = current_time
+        # Update all other parameters
+        sand_storm.set_parameters(
+            wind_strength=wind_strength_slider.value,
+            particle_mass=particle_mass_slider.value,
+            particle_lifetime=particle_lifetime_slider.value,
+            particle_color=particle_color_slider.value,
+            sky_intensity=sky_intensity_slider.value
+        )
 
     # Clear screen and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -140,38 +220,23 @@ while not done:
     glPushMatrix()
     set_3d()
     
-    # Update and draw sky
-    sky.update()
-    sky.draw()
-    
     # Update and draw sand storm with optimized delta time
     dt = min(clock.get_time() / 1000.0, 1/30)  # Cap delta time to prevent large jumps
-    sand_storm.update(dt)
+    sand_storm.update(dt, terrain)
     sand_storm.draw()
     
     # Draw ground and terrain
+    sky.draw()
     ground.draw()
     terrain.draw()
     
-    # Draw coordinate axes only when needed (commented out for better performance)
-    # glDisable(GL_LIGHTING)
-    # glBegin(GL_LINES)
-    # glColor3f(1, 0, 0)
-    # glVertex3f(0, 0, 0)
-    # glVertex3f(1, 0, 0)
-    # glColor3f(0, 1, 0)
-    # glVertex3f(0, 0, 0)
-    # glVertex3f(0, 1, 0)
-    # glColor3f(0, 0, 1)
-    # glVertex3f(0, 0, 0)
-    # glVertex3f(0, 0, 1)
-    # glEnd()
-    # glEnable(GL_LIGHTING)
-
     glPopMatrix()
 
-    # Set up 2D view
+    # Set up 2D view for UI
     set_2d()
+
+    # Draw control panel
+    draw_control_panel()
 
     # Update display
     pygame.display.flip()

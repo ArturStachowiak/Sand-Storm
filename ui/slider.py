@@ -1,3 +1,4 @@
+import math
 import pygame
 from OpenGL.GL import *
 from config.settings import *
@@ -7,15 +8,43 @@ class Slider:
         self.x = x
         self.y = y
         self.width = width
-        self.height = height
+        self.height = 4  # Zmniejszona wysokość toru slidera
         self.min_val = min_val
         self.max_val = max_val
         self.value = initial_val
         self.dragging = False
-        self.knob_size = SLIDER_KNOB_SIZE
+        self.knob_size = 12  # Zmniejszony rozmiar uchwytu
         self.is_count_slider = is_count_slider
         self.is_color_slider = is_color_slider
         self.is_wind_slider = is_wind_slider
+        self.sand_storm = None  # Reference to SandStorm instance
+        
+    def set_sand_storm(self, sand_storm):
+        self.sand_storm = sand_storm
+        
+    def draw_value_text(self):
+        # Create font here instead of in __init__
+        font = pygame.font.Font(None, 24)
+        
+        # Format the value based on slider type
+        if self.is_wind_slider:
+            value_text = f"{int(self.value)}°"
+        else:
+            value_text = f"{int(self.value)}"
+            
+        text_surface = font.render(value_text, True, (0, 0, 0))  # Changed to black color
+        text_data = pygame.image.tostring(text_surface, "RGBA", True)
+        width = text_surface.get_width()
+        height = text_surface.get_height()
+        
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        
+        # Position the text to the right of the slider
+        glRasterPos2d(self.x + self.width + 10, self.y + (self.height - height) / 2)
+        glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, text_data)
+        
+        glDisable(GL_BLEND)
         
     def draw(self):
         # Draw slider track
@@ -48,14 +77,22 @@ class Slider:
             glVertex2f(self.x, self.y + self.height)
         glEnd()
         
-        # Draw slider knob
+        # Draw the numerical value
+        self.draw_value_text()
+        
+        # Draw slider knob last to ensure it's on top
         knob_x = self.x + (self.value - self.min_val) / (self.max_val - self.min_val) * self.width
         glBegin(GL_QUADS)
-        glColor3f(0.7, 0.7, 0.7)  # Light gray knob
-        glVertex2f(knob_x - self.knob_size/2, self.y - self.knob_size/2)
-        glVertex2f(knob_x + self.knob_size/2, self.y - self.knob_size/2)
-        glVertex2f(knob_x + self.knob_size/2, self.y + self.height + self.knob_size/2)
-        glVertex2f(knob_x - self.knob_size/2, self.y + self.height + self.knob_size/2)
+        glColor3f(0.4, 0.4, 0.4)  # Jaśniejszy kolor uchwytu
+        
+        # Dodajemy małe przesunięcie w górę dla lepszej widoczności
+        knob_y_offset = 2
+        
+        # Rysujemy uchwyt wyżej niż tor slidera
+        glVertex2f(knob_x - self.knob_size/2, self.y - self.knob_size/2 + knob_y_offset)
+        glVertex2f(knob_x + self.knob_size/2, self.y - self.knob_size/2 + knob_y_offset)
+        glVertex2f(knob_x + self.knob_size/2, self.y + self.height + self.knob_size/2 + knob_y_offset)
+        glVertex2f(knob_x - self.knob_size/2, self.y + self.height + self.knob_size/2 + knob_y_offset)
         glEnd()
         
     def get_color_at_position(self, position):
@@ -94,13 +131,13 @@ class Slider:
             # Clamp value to valid range
             self.value = max(self.min_val, min(self.max_val, self.value))
             
-            if self.is_count_slider:
-                # Update particle count
-                global CURRENT_PARTICLES, particles
+            if self.is_count_slider and self.sand_storm:
+                # Update particle count in SandStorm
                 new_count = int(self.value)
-                if new_count != CURRENT_PARTICLES:
-                    CURRENT_PARTICLES = new_count
-                    particles = [Particle() for _ in range(CURRENT_PARTICLES)]
+                if len(self.sand_storm.particles) != new_count:
+                    self.sand_storm.particles = []
+                    for _ in range(new_count):
+                        self.sand_storm.add_particles(1, pygame.Vector3(0, 14, 0))
             elif self.is_color_slider:
                 # Update sky colors
                 global SKY_COLOR, SUNSET_COLOR, HORIZON_COLOR
@@ -137,9 +174,9 @@ class Slider:
                 MAX_PARTICLE_SIZE = self.value
                 SMALL_PARTICLE_MAX = self.value * 0.6
 
-def draw_text(text, x, y):
-    font = pygame.font.Font(None, 36)
-    text_surface = font.render(text, True, (255, 255, 255))
+def draw_text(text, x, y, font_size=36):
+    font = pygame.font.Font(None, font_size)
+    text_surface = font.render(text, True, (0, 0, 0))  # Changed to black color
     text_data = pygame.image.tostring(text_surface, "RGBA", True)
     width = text_surface.get_width()
     height = text_surface.get_height()

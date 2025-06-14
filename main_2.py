@@ -30,27 +30,33 @@ SMALL_PARTICLE_MAX = 0.15
 SIZE_CHANGE_SPEED = 0.01
 
 # Particle count settings
-MIN_PARTICLES = 500
+MIN_PARTICLES = 100
 MAX_PARTICLES = 5000
-CURRENT_PARTICLES = 100
+CURRENT_PARTICLES = 500
 
 # Sky color settings
 SKY_COLOR = [0.1, 0.2, 0.4]  # Default dark blue
 SUNSET_COLOR = [0.8, 0.4, 0.2]  # Default orange-red
 HORIZON_COLOR = [0.9, 0.6, 0.3]  # Default light orange
 
-# Slider settings
+# Text settings
+PARTICLE_SIZE_TEXT = 30
+PARTICLE_AMOUNT_TEXT = 130
+SKY_COLOR_TEXT = 230
+WIND_DIRECTION_TEXT = 330
+
+# Particle size Slider settings
 SLIDER_WIDTH = 200
 SLIDER_HEIGHT = 20
 SLIDER_X = 10
-SLIDER_Y = 100
+SLIDER_Y = 50
 SLIDER_MIN = 0.01
 SLIDER_MAX = 0.5
 SLIDER_KNOB_SIZE = 20
 slider_value = 0.25  # Initial value
 slider_dragging = False
 
-# Particle count slider settings
+# Particle amount slider settings
 COUNT_SLIDER_X = 10
 COUNT_SLIDER_Y = 150
 COUNT_SLIDER_MIN = MIN_PARTICLES
@@ -58,25 +64,39 @@ COUNT_SLIDER_MAX = MAX_PARTICLES
 count_slider_value = CURRENT_PARTICLES
 count_slider_dragging = False
 
-# Color slider settings
+# Sky Color slider settings
 COLOR_SLIDER_X = 10
-COLOR_SLIDER_Y = 200
+COLOR_SLIDER_Y = 260
 COLOR_SLIDER_MIN = 0.0
 COLOR_SLIDER_MAX = 1.0
 color_slider_value = 0.5
 color_slider_dragging = False
 
-# Wind settings
-WIND_DIRECTION = [0.5, 0.0, 0.0]  # Default wind direction
-WIND_STRENGTH = 1.0
-
-# Wind direction slider settings
+# Wind slider direction slider settings
 WIND_SLIDER_X = 10
-WIND_SLIDER_Y = 250
+WIND_SLIDER_Y = 370
 WIND_SLIDER_MIN = 0
 WIND_SLIDER_MAX = 360
 wind_slider_value = 0
 wind_slider_dragging = False
+
+# Wind settings
+WIND_DIRECTION = [0.5, 0.0, 0.0]  # Default wind direction
+WIND_STRENGTH = 1.0
+
+# Camera settings
+CAMERA_POSITION = [0.0, 2.0, -20.0]  # Initial camera position
+CAMERA_ROTATION_Y = 0.0  # Horizontal rotation (left/right)
+CAMERA_ROTATION_X = 0.0  # Vertical rotation (up/down)
+CAMERA_SPEED = 0.5  # Movement speed
+ROTATION_SPEED = 2.0  # Rotation speed
+CAMERA_HEIGHT = 2.0  # Height above terrain
+
+# Pendulum camera movement settings
+PENDULUM_AMPLITUDE = 45.0  # Maximum rotation angle (degrees)
+PENDULUM_SPEED = 0.5  # Speed of pendulum movement
+PENDULUM_TIME = 0.0  # Current time for pendulum calculation
+PENDULUM_ENABLED = True  # Enable/disable pendulum movement
 
 # Particle settings
 PARTICLES_PER_CLUSTER = 5  # Number of particles in each cluster
@@ -84,9 +104,71 @@ CLUSTER_RADIUS = 0.5  # Maximum distance between particles in a cluster
 
 # Terrain settings
 TERRAIN_SIZE = 20
-TERRAIN_RESOLUTION = 20  # Number of vertices per side
+TERRAIN_RESOLUTION = 50  # Number of vertices per side
 TERRAIN_HEIGHT = 2.0
 TERRAIN_SCALE = 0.5
+
+# Dune class
+class Dune:
+    def __init__(self, x, z, height, width):
+        self.x = x
+        self.z = z
+        self.height = height
+        self.width = width
+        # Add noise generator for more realistic dune shapes
+        self.noise_gen = OpenSimplex(seed=random.randint(1, 1000))
+
+    def get_height_at(self, x, z):
+        # Calculate distance from dune center
+        dx = x - self.x
+        dz = z - self.z
+        distance = math.sqrt(dx*dx + dz*dz)
+        
+        # Create a more realistic dune shape with noise
+        if distance < self.width:
+            # Base dune shape using a smoother function
+            base_height = self.height * math.exp(-(distance / (self.width * 0.6)) ** 2)
+            
+            # Add noise for more natural appearance
+            noise_x = (x + self.x) * 0.3
+            noise_z = (z + self.z) * 0.3
+            noise_factor = self.noise_gen.noise2(noise_x, noise_z) * 0.3
+            
+            # Add directional variation (dunes are often asymmetric)
+            direction_factor = 1.0 + (dx / self.width) * 0.2
+            
+            # Combine all factors for realistic dune shape
+            final_height = base_height * (1.0 + noise_factor) * direction_factor
+            
+            # Ensure height is positive and within reasonable bounds
+            return max(0, min(self.height * 1.5, final_height))
+        return 0
+
+# Create dunes
+dunes = [
+    Dune(-5, -5, 2, 3),
+    Dune(5, -3, 2.5, 4),
+    Dune(0, -8, 3, 5),
+    Dune(-8, 0, 2, 3),
+    Dune(8, 0, 2.5, 4),
+    # Dodanie większej liczby wydm dla bardziej realistycznego krajobrazu
+    Dune(-3, 3, 1.8, 2.5),
+    Dune(3, 5, 2.2, 3.2),
+    Dune(-6, -2, 1.5, 2.8),
+    Dune(6, -6, 2.8, 4.5),
+    Dune(0, 0, 1.2, 2.0),
+    Dune(-2, -7, 2.1, 3.1),
+    Dune(4, 2, 1.9, 2.7),
+    Dune(-4, 6, 2.3, 3.8),
+    Dune(7, 3, 1.7, 2.4),
+    Dune(-7, -4, 2.4, 3.6)
+]
+
+def get_terrain_height(x, z):
+    height = 0
+    for dune in dunes:
+        height += dune.get_height_at(x, z)
+    return height
 
 class Terrain:
     def __init__(self):
@@ -104,19 +186,29 @@ class Terrain:
                 x = i / TERRAIN_RESOLUTION * TERRAIN_SCALE
                 y = j / TERRAIN_RESOLUTION * TERRAIN_SCALE
                 
+                # Get base terrain height from dunes
+                base_height = get_terrain_height(x * TERRAIN_SIZE, y * TERRAIN_SIZE)
+                
+                # Add noise for more natural terrain variation
                 # Large formations
-                height = noise_gen.noise2(x, y) * 3.0
+                noise_large = noise_gen.noise2(x, y) * 1.0
                 # Medium details
-                height += noise_gen.noise2(x * 2, y * 2) * 1.5
+                noise_medium = noise_gen.noise2(x * 3, y * 3) * 0.5
                 # Small details
-                height += noise_gen.noise2(x * 4, y * 4) * 0.3
+                noise_small = noise_gen.noise2(x * 8, y * 8) * 0.2
                 
-                # Dodanie losowych szczytów
-                if random.random() < 0.1:  # 10% szans na wyższy szczyt
-                    height *= 1.5
+                # Combine dune height with noise
+                height = base_height + noise_large + noise_medium + noise_small
                 
-                # Zwiększenie ogólnej wysokości terenu
-                self.height_map[i, j] = height * TERRAIN_HEIGHT * 1.5
+                # Add some random variations for more realistic appearance
+                if random.random() < 0.05:  # 5% chance for small variations
+                    height += random.uniform(-0.5, 0.5)
+                
+                # Ensure minimum height and smooth transitions
+                height = max(0, height)
+                
+                # Store in height map
+                self.height_map[i, j] = height
         
         # Generate vertices and colors
         for i in range(TERRAIN_RESOLUTION):
@@ -132,25 +224,39 @@ class Terrain:
                 # Calculate color based on height, position and random pattern
                 height_factor = (y + TERRAIN_HEIGHT) / (2 * TERRAIN_HEIGHT)
                 
-                # Bazowe kolory piasku z większym kontrastem
+                # Bazowe kolory piasku z większym kontrastem i gradientami
                 sand_colors = [
-                    [0.90, 0.85, 0.65],  # Jasny, ciepły piasek
-                    [0.75, 0.55, 0.35],  # Ciemny, ciepły piasek
-                    [0.65, 0.60, 0.45],  # Szary piasek
-                    [0.85, 0.70, 0.40],  # Pomarańczowy piasek
-                    [0.70, 0.80, 0.60],  # Zielonkawy piasek
-                    [0.80, 0.60, 0.30],  # Czerwony piasek
+                    [0.95, 0.90, 0.70],  # Jasny, ciepły piasek (szczyty)
+                    [0.85, 0.75, 0.55],  # Średni, ciepły piasek
+                    [0.75, 0.55, 0.35],  # Ciemny, ciepły piasek (doliny)
+                    [0.80, 0.65, 0.45],  # Pomarańczowy piasek
+                    [0.70, 0.60, 0.40],  # Czerwono-brązowy piasek
+                    [0.90, 0.80, 0.60],  # Jasny żółty piasek
                 ]
                 
-                # Wybór bazowego koloru z losową wariacją
-                base_color = random.choice(sand_colors)
-                variation = random.uniform(-0.2, 0.2)  # Zwiększona wariacja
+                # Wybór bazowego koloru z gradientem wysokości
+                if height_factor > 0.7:  # Szczyty wydm
+                    base_color = sand_colors[0]  # Jasny piasek
+                elif height_factor > 0.4:  # Środkowe części
+                    base_color = sand_colors[1]  # Średni piasek
+                else:  # Doliny i podstawy
+                    base_color = sand_colors[2]  # Ciemny piasek
                 
-                # Dodanie gradientu wysokości i losowej wariacji
+                # Dodanie gradientu wysokości z płynniejszymi przejściami
+                height_gradient = height_factor * 0.4  # Zmniejszony wpływ wysokości
+                
+                # Dodanie losowej wariacji dla naturalności
+                variation = random.uniform(-0.15, 0.15)  # Zmniejszona wariacja
+                
+                # Dodanie gradientu pozycji (wydmy mają różne kolory w różnych miejscach)
+                position_factor = (x + z) / (TERRAIN_SIZE * 2)  # Normalizacja pozycji
+                position_variation = math.sin(position_factor * math.pi * 2) * 0.1
+                
+                # Finalny kolor z gradientami
                 color = [
-                    base_color[0] + (height_factor * 0.3) + variation,  # Zwiększony wpływ wysokości
-                    base_color[1] + (height_factor * 0.25) + variation,
-                    base_color[2] + (height_factor * 0.2) + variation,
+                    base_color[0] + height_gradient + variation + position_variation,
+                    base_color[1] + height_gradient * 0.8 + variation + position_variation,
+                    base_color[2] + height_gradient * 0.6 + variation + position_variation,
                     1.0
                 ]
                 
@@ -306,8 +412,20 @@ class Slider:
                 global CURRENT_PARTICLES, particles
                 new_count = int(self.value)
                 if new_count != CURRENT_PARTICLES:
+                    old_count = CURRENT_PARTICLES
                     CURRENT_PARTICLES = new_count
-                    particles = [Particle() for _ in range(CURRENT_PARTICLES)]
+                    
+                    if new_count > old_count:
+                        # Add more particles
+                        for _ in range(new_count - old_count):
+                            particles.append(Particle())
+                    elif new_count < old_count:
+                        # Remove excess particles
+                        particles = particles[:new_count]
+                    
+                    # Update transparency for all particles
+                    for particle in particles:
+                        particle.update_transparency()
             elif self.is_color_slider:
                 # Update sky colors
                 global SKY_COLOR, SUNSET_COLOR, HORIZON_COLOR
@@ -358,26 +476,62 @@ class Sky:
     def draw(self):
         # Draw sky gradient
         glBegin(GL_QUADS)
+        
+        # Back wall (sky gradient)
         # Top of sky
+        glColor3f(*SKY_COLOR)
+        glVertex3f(-20, 20, -20)
+        glVertex3f(20, 20, -20)
+        glVertex3f(20, 0, -20)
+        glVertex3f(-20, 0, -20)
+        
+        # Middle of sky (sunset colors)
+        glColor3f(*SUNSET_COLOR)
+        glVertex3f(-20, 0, -20)
+        glVertex3f(20, 0, -20)
+        glVertex3f(20, -20, -20)
+        glVertex3f(-20, -20, -20)
+        
+        # Left wall
+        glColor3f(*SKY_COLOR)
+        glVertex3f(-20, 20, -20)
+        glVertex3f(-20, 20, 20)
+        glVertex3f(-20, 0, 20)
+        glVertex3f(-20, 0, -20)
+        
+        glColor3f(*SUNSET_COLOR)
+        glVertex3f(-20, 0, -20)
+        glVertex3f(-20, 0, 20)
+        glVertex3f(-20, -20, 20)
+        glVertex3f(-20, -20, -20)
+        
+        # Right wall
+        glColor3f(*SKY_COLOR)
+        glVertex3f(20, 20, -20)
+        glVertex3f(20, 20, 20)
+        glVertex3f(20, 0, 20)
+        glVertex3f(20, 0, -20)
+        
+        glColor3f(*SUNSET_COLOR)
+        glVertex3f(20, 0, -20)
+        glVertex3f(20, 0, 20)
+        glVertex3f(20, -20, 20)
+        glVertex3f(20, -20, -20)
+        
+        # Top wall (ceiling)
         glColor3f(*SKY_COLOR)
         glVertex3f(-20, 20, -20)
         glVertex3f(20, 20, -20)
         glVertex3f(20, 20, 20)
         glVertex3f(-20, 20, 20)
         
-        # Middle of sky (sunset colors)
-        glColor3f(*SUNSET_COLOR)
-        glVertex3f(-20, 0, -20)
-        glVertex3f(20, 0, -20)
-        glVertex3f(20, 20, -20)
-        glVertex3f(-20, 20, -20)
-        
-        # Bottom of sky
+        # Bottom wall (floor sky reflection)
         glColor3f(*HORIZON_COLOR)
         glVertex3f(-20, -20, -20)
         glVertex3f(20, -20, -20)
-        glVertex3f(20, 0, -20)
-        glVertex3f(-20, 0, -20)
+        glVertex3f(20, -20, 20)
+        glVertex3f(-20, -20, 20)
+        
         glEnd()
         
         # Draw sun
@@ -448,39 +602,82 @@ class Wind:
         
         return (self.current_direction + turbulence) * self.strength * height_factor * size_factor
 
-# Dune class
-class Dune:
-    def __init__(self, x, z, height, width):
-        self.x = x
-        self.z = z
-        self.height = height
-        self.width = width
+def get_camera_terrain_height(x, z):
+    """Get terrain height at camera position, including terrain mesh"""
+    # Get dune height
+    dune_height = get_terrain_height(x, z)
+    
+    # Get terrain mesh height (simplified - using noise)
+    noise_gen = OpenSimplex(seed=42)
+    terrain_x = (x + TERRAIN_SIZE/2) / TERRAIN_SIZE * TERRAIN_SCALE
+    terrain_z = (z + TERRAIN_SIZE/2) / TERRAIN_SIZE * TERRAIN_SCALE
+    
+    # Calculate terrain height using the same noise function as terrain
+    terrain_height = noise_gen.noise2(terrain_x, terrain_z) * 3.0
+    terrain_height += noise_gen.noise2(terrain_x * 2, terrain_z * 2) * 1.5
+    terrain_height += noise_gen.noise2(terrain_x * 4, terrain_z * 4) * 0.3
+    terrain_height *= TERRAIN_HEIGHT * 1.5
+    
+    return max(dune_height, terrain_height)
 
-    def get_height_at(self, x, z):
-        # Calculate distance from dune center
-        dx = x - self.x
-        dz = z - self.z
-        distance = math.sqrt(dx*dx + dz*dz)
+def handle_camera_movement():
+    """Handle camera movement and rotation based on key presses"""
+    global CAMERA_POSITION, CAMERA_ROTATION_Y, CAMERA_ROTATION_X
+    
+    keys = pygame.key.get_pressed()
+    
+    # Calculate forward and right vectors based on camera rotation
+    forward_x = math.sin(math.radians(CAMERA_ROTATION_Y))
+    forward_z = math.cos(math.radians(CAMERA_ROTATION_Y))
+    right_x = math.cos(math.radians(CAMERA_ROTATION_Y))
+    right_z = -math.sin(math.radians(CAMERA_ROTATION_Y))
+    
+    # Handle movement
+    if keys[pygame.K_w]:  # Forward
+        new_x = CAMERA_POSITION[0] + forward_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] + forward_z * CAMERA_SPEED
+        # Check terrain height at new position
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    if keys[pygame.K_s]:  # Backward
+        new_x = CAMERA_POSITION[0] - forward_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] - forward_z * CAMERA_SPEED
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    if keys[pygame.K_a]:  # Left
+        new_x = CAMERA_POSITION[0] - right_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] - right_z * CAMERA_SPEED
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    if keys[pygame.K_d]:  # Right
+        new_x = CAMERA_POSITION[0] + right_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] + right_z * CAMERA_SPEED
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    # Handle rotation with mouse
+    if pygame.mouse.get_pressed()[0]:  # Left mouse button
+        mouse_rel = pygame.mouse.get_rel()
+        CAMERA_ROTATION_Y += mouse_rel[0] * 0.5
+        CAMERA_ROTATION_X -= mouse_rel[1] * 0.5
         
-        # Create a bell-shaped curve for the dune
-        if distance < self.width:
-            return self.height * math.cos(distance * math.pi / self.width) ** 2
-        return 0
-
-# Create dunes
-dunes = [
-    Dune(-5, -5, 2, 3),
-    Dune(5, -3, 2.5, 4),
-    Dune(0, -8, 3, 5),
-    Dune(-8, 0, 2, 3),
-    Dune(8, 0, 2.5, 4)
-]
-
-def get_terrain_height(x, z):
-    height = 0
-    for dune in dunes:
-        height += dune.get_height_at(x, z)
-    return height
+        # Clamp vertical rotation
+        CAMERA_ROTATION_X = max(-90, min(90, CAMERA_ROTATION_X))
+    
+    # Keep camera within bounds
+    CAMERA_POSITION[0] = max(-15, min(15, CAMERA_POSITION[0]))
+    CAMERA_POSITION[2] = max(-15, min(15, CAMERA_POSITION[2]))
 
 # Particle class
 class Particle:
@@ -501,10 +698,17 @@ class Particle:
         # Initialize velocity
         self.velocity = np.array([0.0, 0.0, 0.0])
         
-        # Initialize color with slight variation and random transparency
+        # Initialize color with slight variation and transparency based on particle count
         base_color = 0.8
         variation = random.uniform(-0.1, 0.1)
-        transparency = random.uniform(0.5, 1.0)
+        
+        # Calculate transparency based on total particle count
+        # More particles = more transparency to avoid overcrowding
+        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
+        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
+        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
+        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        
         self.color = [base_color + variation, base_color + variation, base_color + variation, transparency]
         
         # Initialize rotation
@@ -588,20 +792,11 @@ class Particle:
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
         glEnable(GL_COLOR_MATERIAL)
-        glEnable(GL_NORMALIZE)
         
         # Set up light
-        light_pos = [0, 10, 0, 1]  # Pozycja światła
-        glLightfv(GL_LIGHT0, GL_POSITION, light_pos)
-        glLightfv(GL_LIGHT0, GL_AMBIENT, [0.3, 0.3, 0.3, 1.0])  # Światło otoczenia
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, [0.8, 0.8, 0.7, 1.0])  # Światło rozproszone (lekko żółtawe)
-        glLightfv(GL_LIGHT0, GL_SPECULAR, [1.0, 1.0, 0.9, 1.0])  # Światło odbite (lekko żółtawe)
-        
-        # Set material properties
-        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-        glMaterialfv(GL_FRONT, GL_SPECULAR, [0.5, 0.5, 0.5, 1.0])
-        glMaterialf(GL_FRONT, GL_SHININESS, 50.0)
+        glLightfv(GL_LIGHT0, GL_POSITION, [1, 1, 1, 0])
+        glLightfv(GL_LIGHT0, GL_AMBIENT, [0.2, 0.2, 0.2, 1])
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, [0.8, 0.8, 0.8, 1])
         
         # Draw particle
         glBindVertexArray(self.vao)
@@ -612,7 +807,6 @@ class Particle:
         glDisable(GL_LIGHTING)
         glDisable(GL_LIGHT0)
         glDisable(GL_COLOR_MATERIAL)
-        glDisable(GL_NORMALIZE)
         glDisable(GL_BLEND)
         
         glPopMatrix()
@@ -656,6 +850,27 @@ class Particle:
         self.velocity = np.array([0.0, 0.0, 0.0])
         self.age = 0
         self.lifetime = random.uniform(0.8, 1.2)
+        # Update transparency based on current particle count
+        self.update_transparency()
+    
+    def update_transparency(self):
+        """Update particle transparency based on current particle count"""
+        # Calculate transparency based on total particle count
+        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
+        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
+        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
+        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        
+        # Update color with new transparency
+        self.color[3] = transparency
+        
+        # Update the color buffer with new transparency
+        for i in range(3, len(self.colors), 4):  # Update alpha channel (every 4th value)
+            self.colors[i] = transparency
+        
+        # Update the color buffer on GPU
+        glBindBuffer(GL_ARRAY_BUFFER, self.cbo)
+        glBufferData(GL_ARRAY_BUFFER, self.colors.nbytes, self.colors, GL_STATIC_DRAW)
 
 def draw_text(text, x, y):
     font = pygame.font.Font(None, 36)
@@ -685,6 +900,10 @@ for _ in range(CURRENT_PARTICLES // PARTICLES_PER_CLUSTER):
     # Generate particles for this cluster
     for _ in range(PARTICLES_PER_CLUSTER):
         particles.append(Particle())
+
+# Update transparency for all particles based on initial count
+for particle in particles:
+    particle.update_transparency()
 
 wind = Wind()
 sky = Sky()
@@ -835,9 +1054,6 @@ while running:
         particle.update(wind)
         particle.draw()
     
-    # Rotate the view slightly to show 3D effect
-    glRotatef(0.1, 0, 1, 0)
-    
     # Draw UI
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
@@ -859,14 +1075,14 @@ while running:
     color_text = f"Kolor nieba: {color_slider.value:.2f}"
     wind_text = f"Kierunek wiatru: {wind_slider.value:.0f}°"
     
-    draw_text(size_text, 10, 30)
-    draw_text("Przeciągnij suwak aby zmienić rozmiar", 10, 70)
-    draw_text(count_text, 10, 120)
-    draw_text("Przeciągnij suwak aby zmienić liczbę cząsteczek", 10, 160)
-    draw_text(color_text, 10, 180)
-    draw_text("Przeciągnij suwak aby zmienić kolor nieba", 10, 220)
-    draw_text(wind_text, 10, 240)
-    draw_text("Przeciągnij suwak aby zmienić kierunek wiatru", 10, 280)
+    draw_text(size_text, 0, PARTICLE_SIZE_TEXT)
+    
+    draw_text(count_text, 0, PARTICLE_AMOUNT_TEXT)
+    
+    draw_text(color_text, 0, SKY_COLOR_TEXT)
+    
+    draw_text(wind_text, 0, WIND_DIRECTION_TEXT)
+    
     
     glMatrixMode(GL_PROJECTION)
     glPopMatrix()

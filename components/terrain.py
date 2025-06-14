@@ -10,7 +10,6 @@ class Terrain:
         self.vertices = []
         self.indices = []
         self.colors = []
-        self.normals = []  # Add normals array
         
         # Initialize noise generator
         noise_gen = OpenSimplex(seed=42)
@@ -75,9 +74,6 @@ class Terrain:
                 # Ograniczenie wartości kolorów do zakresu [0, 1]
                 color = [max(0, min(1, c)) for c in color]
                 self.colors.extend(color)
-                
-                # Initialize normal vector (will be calculated later)
-                self.normals.extend([0.0, 1.0, 0.0])
         
         # Generate indices for triangles
         for i in range(TERRAIN_RESOLUTION - 1):
@@ -91,29 +87,11 @@ class Terrain:
                 # Add two triangles
                 self.indices.extend([v0, v1, v2])
                 self.indices.extend([v1, v3, v2])
-                
-                # Calculate normals for the triangles
-                for tri in [[v0, v1, v2], [v1, v3, v2]]:
-                    # Get vertices of the triangle
-                    v1_pos = np.array(self.vertices[tri[0]*3:tri[0]*3+3])
-                    v2_pos = np.array(self.vertices[tri[1]*3:tri[1]*3+3])
-                    v3_pos = np.array(self.vertices[tri[2]*3:tri[2]*3+3])
-                    
-                    # Calculate normal vector
-                    edge1 = v2_pos - v1_pos
-                    edge2 = v3_pos - v1_pos
-                    normal = np.cross(edge1, edge2)
-                    normal = normal / np.linalg.norm(normal)  # Normalize
-                    
-                    # Add normal to all vertices of the triangle
-                    for vertex_idx in tri:
-                        self.normals[vertex_idx*3:vertex_idx*3+3] = normal
         
         # Convert to numpy arrays
         self.vertices = np.array(self.vertices, dtype=np.float32)
         self.colors = np.array(self.colors, dtype=np.float32)
         self.indices = np.array(self.indices, dtype=np.uint32)
-        self.normals = np.array(self.normals, dtype=np.float32)
         
         # Create VAO and VBOs
         self.vao = glGenVertexArrays(1)
@@ -133,13 +111,6 @@ class Terrain:
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, None)
         glEnableVertexAttribArray(1)
         
-        # Normal buffer
-        self.nbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
-        glBufferData(GL_ARRAY_BUFFER, self.normals.nbytes, self.normals, GL_STATIC_DRAW)
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, None)
-        glEnableVertexAttribArray(2)
-        
         # Index buffer
         self.ibo = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
@@ -148,39 +119,10 @@ class Terrain:
         glBindVertexArray(0)
     
     def draw(self):
-        # Enable lighting
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_NORMALIZE)
-        
-        # Set up light with warmer colors and stronger contrast
-        light_pos = [5, 15, -5, 1]  # Przesunięte światło dla lepszego efektu głębi
-        glLightfv(GL_LIGHT0, GL_POSITION, light_pos)
-        
-        # Cieplejsze światło otoczenia z delikatnym pomarańczowym odcieniem
-        glLightfv(GL_LIGHT0, GL_AMBIENT, [0.4, 0.35, 0.25, 1.0])
-        
-        # Intensywniejsze światło rozproszone z ciepłym żółtym odcieniem
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, [0.9, 0.85, 0.6, 1.0])
-        
-        # Dodanie światła odbitego z pomarańczowym odcieniem
-        glLightfv(GL_LIGHT0, GL_SPECULAR, [1.0, 0.8, 0.4, 1.0])
-        
-        # Ulepszone właściwości materiału dla lepszego efektu głębi
-        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.3, 0.25, 0.15, 1.0])  # Ciemniejszy ambient dla większego kontrastu
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.9, 0.85, 0.6, 1.0])   # Jasny, ciepły kolor bazowy
-        glMaterialfv(GL_FRONT, GL_SPECULAR, [0.8, 0.6, 0.3, 1.0])   # Pomarańczowy połysk
-        glMaterialf(GL_FRONT, GL_SHININESS, 30.0)                   # Zmniejszony połysk dla bardziej naturalnego wyglądu
-        
         # Draw terrain
         glBindVertexArray(self.vao)
         glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
         glBindVertexArray(0)
-        
-        # Disable lighting
-        glDisable(GL_LIGHTING)
-        glDisable(GL_LIGHT0)
-        glDisable(GL_NORMALIZE)
 
     def get_vertices(self):
         """

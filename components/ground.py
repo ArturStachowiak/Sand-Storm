@@ -5,43 +5,51 @@ from config.settings import *
 
 class Ground:
     def __init__(self):
-        # Bazowe kolory piasku - zredukowana paleta
+        # Bazowe kolory piasku z większym kontrastem
         self.sand_colors = [
-            [0.55, 0.27, 0.07],  # Ciemny brąz
-            [0.65, 0.35, 0.15],  # Średni brąz
-            [0.75, 0.45, 0.25],  # Jasny brąz
+            [0.90, 0.85, 0.65],  # Jasny, ciepły piasek
+            [0.75, 0.55, 0.35],  # Ciemny, ciepły piasek
+            [0.65, 0.60, 0.45],  # Szary piasek
+            [0.85, 0.70, 0.40],  # Pomarańczowy piasek
+            [0.70, 0.80, 0.60],  # Zielonkawy piasek
+            [0.80, 0.60, 0.30],  # Czerwony piasek
         ]
         
-        # Rozmiar podłoża
-        size = TERRAIN_SIZE * 1.5
-        resolution = TERRAIN_RESOLUTION // 2
-        
         # Generowanie wierzchołków i kolorów dla podłoża
-        vertices = []
-        colors = []
-        indexes = []
+        self.vertices = []
+        self.colors = []
+        self.indices = []
+        
+        # Rozmiar podłoża
+        size = TERRAIN_SIZE # Nieco większe niż teren
+        resolution = TERRAIN_RESOLUTION // 2  # Mniejsza rozdzielczość dla wydajności
         
         # Generowanie siatki podłoża
         for i in range(resolution):
             for j in range(resolution):
-                # Pozycja wierzchołka - poprawione centrowanie
-                x = (i / (resolution - 1) - 0.5) * size
-                z = (j / (resolution - 1) - 0.5) * size
-                y = -TERRAIN_HEIGHT
+                # Pozycja wierzchołka
+                x = (i / resolution - 0.5) * size
+                z = (j / resolution - 0.5) * size
+                y = -TERRAIN_HEIGHT * 0.5  # Położenie pod terenem
                 
-                vertices.extend([x, y, z])
+                # Dodanie wierzchołka
+                self.vertices.extend([x, y, z])
                 
-                # Generowanie koloru z mniejszą wariacją
+                # Generowanie koloru z losową wariacją
                 base_color = random.choice(self.sand_colors)
-                variation = random.uniform(-0.1, 0.1)
+                variation = random.uniform(-0.2, 0.2)
                 
+                # Dodanie wariacji do koloru
                 color = [
-                    max(0, min(1, base_color[0] + variation)),
-                    max(0, min(1, base_color[1] + variation)),
-                    max(0, min(1, base_color[2] + variation)),
+                    base_color[0] + variation,
+                    base_color[1] + variation,
+                    base_color[2] + variation,
                     1.0
                 ]
-                colors.extend(color)
+                
+                # Ograniczenie wartości kolorów
+                color = [max(0, min(1, c)) for c in color]
+                self.colors.extend(color)
         
         # Generowanie indeksów dla trójkątów
         for i in range(resolution - 1):
@@ -51,12 +59,13 @@ class Ground:
                 v2 = (i + 1) * resolution + j
                 v3 = v2 + 1
                 
-                indexes.extend([v0, v1, v2, v1, v3, v2])
+                self.indices.extend([v0, v1, v2])
+                self.indices.extend([v1, v3, v2])
         
         # Konwersja na tablice numpy
-        self.vertices = np.array(vertices, dtype=np.float32)
-        self.colors = np.array(colors, dtype=np.float32)
-        self.indexes = np.array(indexes, dtype=np.uint32)
+        self.vertices = np.array(self.vertices, dtype=np.float32)
+        self.colors = np.array(self.colors, dtype=np.float32)
+        self.indices = np.array(self.indices, dtype=np.uint32)
         
         # Tworzenie VAO i VBO
         self.vao = glGenVertexArrays(1)
@@ -80,13 +89,13 @@ class Ground:
         
         # Bufor indeksów
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indexes.nbytes, self.indexes, GL_STATIC_DRAW)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL_STATIC_DRAW)
         
         glBindVertexArray(0)
     
     def draw(self):
         glBindVertexArray(self.vao)
-        glDrawElements(GL_TRIANGLES, len(self.indexes), GL_UNSIGNED_INT, None)
+        glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
         glBindVertexArray(0)
 
     def get_vertices(self):
