@@ -20,7 +20,7 @@ class Camera:
         
         # Macierz widoku kamery
         self.view_matrix = np.identity(4)
-        self.position = pygame.Vector3(0, 0, 5)  # Pozycja początkowa kamery
+        self.position = pygame.Vector3(0, 15, 20)  # Adjusted position for better centering
         
         # Kąty rotacji kamery
         self.yaw = 0.0    # Obrót wokół osi Y
@@ -102,15 +102,15 @@ class Camera:
         )
         
         # Ruch do przodu/tyłu
-        if key[pygame.K_UP]:
+        if key[pygame.K_w]:
             self.position -= forward * self.move_speed
-        if key[pygame.K_DOWN]:
+        if key[pygame.K_s]:
             self.position += forward * self.move_speed
             
         # Ruch w lewo/prawo
-        if key[pygame.K_LEFT]:
+        if key[pygame.K_a]:
             self.position -= right * self.move_speed
-        if key[pygame.K_RIGHT]:
+        if key[pygame.K_d]:
             self.position += right * self.move_speed
             
         # Ruch w górę/dół
