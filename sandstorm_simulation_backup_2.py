@@ -31,27 +31,33 @@ SMALL_PARTICLE_MAX = 0.15
 SIZE_CHANGE_SPEED = 0.01
 
 # Particle count settings
-MIN_PARTICLES = 500
+MIN_PARTICLES = 100
 MAX_PARTICLES = 5000
-CURRENT_PARTICLES = 3000
+CURRENT_PARTICLES = 500
 
 # Sky color settings
 SKY_COLOR = [0.1, 0.2, 0.4]  # Default dark blue
 SUNSET_COLOR = [0.8, 0.4, 0.2]  # Default orange-red
 HORIZON_COLOR = [0.9, 0.6, 0.3]  # Default light orange
 
-# Slider settings
+# Text settings
+PARTICLE_SIZE_TEXT = 30
+PARTICLE_AMOUNT_TEXT = 130
+SKY_COLOR_TEXT = 230
+WIND_DIRECTION_TEXT = 330
+
+# Particle size Slider settings
 SLIDER_WIDTH = 200
 SLIDER_HEIGHT = 20
 SLIDER_X = 10
-SLIDER_Y = 100
+SLIDER_Y = 50
 SLIDER_MIN = 0.01
 SLIDER_MAX = 0.5
 SLIDER_KNOB_SIZE = 20
 slider_value = 0.25  # Initial value
 slider_dragging = False
 
-# Particle count slider settings
+# Particle amount slider settings
 COUNT_SLIDER_X = 10
 COUNT_SLIDER_Y = 150
 COUNT_SLIDER_MIN = MIN_PARTICLES
@@ -59,25 +65,39 @@ COUNT_SLIDER_MAX = MAX_PARTICLES
 count_slider_value = CURRENT_PARTICLES
 count_slider_dragging = False
 
-# Color slider settings
+# Sky Color slider settings
 COLOR_SLIDER_X = 10
-COLOR_SLIDER_Y = 200
+COLOR_SLIDER_Y = 260
 COLOR_SLIDER_MIN = 0.0
 COLOR_SLIDER_MAX = 1.0
 color_slider_value = 0.5
 color_slider_dragging = False
 
-# Wind settings
-WIND_DIRECTION = [0.5, 0.0, 0.0]  # Default wind direction
-WIND_STRENGTH = 1.0
-
-# Wind direction slider settings
+# Wind slider direction slider settings
 WIND_SLIDER_X = 10
-WIND_SLIDER_Y = 250
+WIND_SLIDER_Y = 370
 WIND_SLIDER_MIN = 0
 WIND_SLIDER_MAX = 360
 wind_slider_value = 0
 wind_slider_dragging = False
+
+# Wind settings
+WIND_DIRECTION = [0.5, 0.0, 0.0]  # Default wind direction
+WIND_STRENGTH = 1.0
+
+# Camera settings
+CAMERA_POSITION = [0.0, 2.0, -20.0]  # Initial camera position
+CAMERA_ROTATION_Y = 0.0  # Horizontal rotation (left/right)
+CAMERA_ROTATION_X = 0.0  # Vertical rotation (up/down)
+CAMERA_SPEED = 0.5  # Movement speed
+ROTATION_SPEED = 2.0  # Rotation speed
+CAMERA_HEIGHT = 2.0  # Height above terrain
+
+# Pendulum camera movement settings
+PENDULUM_AMPLITUDE = 45.0  # Maximum rotation angle (degrees)
+PENDULUM_SPEED = 0.5  # Speed of pendulum movement
+PENDULUM_TIME = 0.0  # Current time for pendulum calculation
+PENDULUM_ENABLED = True  # Enable/disable pendulum movement
 
 # Particle settings
 PARTICLES_PER_CLUSTER = 5  # Number of particles in each cluster
@@ -359,26 +379,62 @@ class Sky:
     def draw(self):
         # Draw sky gradient
         glBegin(GL_QUADS)
+        
+        # Back wall (sky gradient)
         # Top of sky
+        glColor3f(*SKY_COLOR)
+        glVertex3f(-20, 20, -20)
+        glVertex3f(20, 20, -20)
+        glVertex3f(20, 0, -20)
+        glVertex3f(-20, 0, -20)
+        
+        # Middle of sky (sunset colors)
+        glColor3f(*SUNSET_COLOR)
+        glVertex3f(-20, 0, -20)
+        glVertex3f(20, 0, -20)
+        glVertex3f(20, -20, -20)
+        glVertex3f(-20, -20, -20)
+        
+        # Left wall
+        glColor3f(*SKY_COLOR)
+        glVertex3f(-20, 20, -20)
+        glVertex3f(-20, 20, 20)
+        glVertex3f(-20, 0, 20)
+        glVertex3f(-20, 0, -20)
+        
+        glColor3f(*SUNSET_COLOR)
+        glVertex3f(-20, 0, -20)
+        glVertex3f(-20, 0, 20)
+        glVertex3f(-20, -20, 20)
+        glVertex3f(-20, -20, -20)
+        
+        # Right wall
+        glColor3f(*SKY_COLOR)
+        glVertex3f(20, 20, -20)
+        glVertex3f(20, 20, 20)
+        glVertex3f(20, 0, 20)
+        glVertex3f(20, 0, -20)
+        
+        glColor3f(*SUNSET_COLOR)
+        glVertex3f(20, 0, -20)
+        glVertex3f(20, 0, 20)
+        glVertex3f(20, -20, 20)
+        glVertex3f(20, -20, -20)
+        
+        # Top wall (ceiling)
         glColor3f(*SKY_COLOR)
         glVertex3f(-20, 20, -20)
         glVertex3f(20, 20, -20)
         glVertex3f(20, 20, 20)
         glVertex3f(-20, 20, 20)
         
-        # Middle of sky (sunset colors)
-        glColor3f(*SUNSET_COLOR)
-        glVertex3f(-20, 0, -20)
-        glVertex3f(20, 0, -20)
-        glVertex3f(20, 20, -20)
-        glVertex3f(-20, 20, -20)
-        
-        # Bottom of sky
+        # Bottom wall (floor sky reflection)
         glColor3f(*HORIZON_COLOR)
         glVertex3f(-20, -20, -20)
         glVertex3f(20, -20, -20)
-        glVertex3f(20, 0, -20)
-        glVertex3f(-20, 0, -20)
+        glVertex3f(20, -20, 20)
+        glVertex3f(-20, -20, 20)
+        
         glEnd()
         
         # Draw sun
@@ -483,6 +539,83 @@ def get_terrain_height(x, z):
         height += dune.get_height_at(x, z)
     return height
 
+def get_camera_terrain_height(x, z):
+    """Get terrain height at camera position, including terrain mesh"""
+    # Get dune height
+    dune_height = get_terrain_height(x, z)
+    
+    # Get terrain mesh height (simplified - using noise)
+    noise_gen = OpenSimplex(seed=42)
+    terrain_x = (x + TERRAIN_SIZE/2) / TERRAIN_SIZE * TERRAIN_SCALE
+    terrain_z = (z + TERRAIN_SIZE/2) / TERRAIN_SIZE * TERRAIN_SCALE
+    
+    # Calculate terrain height using the same noise function as terrain
+    terrain_height = noise_gen.noise2(terrain_x, terrain_z) * 3.0
+    terrain_height += noise_gen.noise2(terrain_x * 2, terrain_z * 2) * 1.5
+    terrain_height += noise_gen.noise2(terrain_x * 4, terrain_z * 4) * 0.3
+    terrain_height *= TERRAIN_HEIGHT * 1.5
+    
+    return max(dune_height, terrain_height)
+
+def handle_camera_movement():
+    """Handle camera movement and rotation based on key presses"""
+    global CAMERA_POSITION, CAMERA_ROTATION_Y, CAMERA_ROTATION_X
+    
+    keys = pygame.key.get_pressed()
+    
+    # Calculate forward and right vectors based on camera rotation
+    forward_x = math.sin(math.radians(CAMERA_ROTATION_Y))
+    forward_z = math.cos(math.radians(CAMERA_ROTATION_Y))
+    right_x = math.cos(math.radians(CAMERA_ROTATION_Y))
+    right_z = -math.sin(math.radians(CAMERA_ROTATION_Y))
+    
+    # Handle movement
+    if keys[pygame.K_w]:  # Forward
+        new_x = CAMERA_POSITION[0] + forward_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] + forward_z * CAMERA_SPEED
+        # Check terrain height at new position
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    if keys[pygame.K_s]:  # Backward
+        new_x = CAMERA_POSITION[0] - forward_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] - forward_z * CAMERA_SPEED
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    if keys[pygame.K_a]:  # Left
+        new_x = CAMERA_POSITION[0] - right_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] - right_z * CAMERA_SPEED
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    if keys[pygame.K_d]:  # Right
+        new_x = CAMERA_POSITION[0] + right_x * CAMERA_SPEED
+        new_z = CAMERA_POSITION[2] + right_z * CAMERA_SPEED
+        terrain_height = get_camera_terrain_height(new_x, new_z)
+        CAMERA_POSITION[0] = new_x
+        CAMERA_POSITION[2] = new_z
+        CAMERA_POSITION[1] = terrain_height + CAMERA_HEIGHT
+    
+    # Handle rotation with mouse
+    if pygame.mouse.get_pressed()[0]:  # Left mouse button
+        mouse_rel = pygame.mouse.get_rel()
+        CAMERA_ROTATION_Y += mouse_rel[0] * 0.5
+        CAMERA_ROTATION_X -= mouse_rel[1] * 0.5
+        
+        # Clamp vertical rotation
+        CAMERA_ROTATION_X = max(-90, min(90, CAMERA_ROTATION_X))
+    
+    # Keep camera within bounds
+    CAMERA_POSITION[0] = max(-15, min(15, CAMERA_POSITION[0]))
+    CAMERA_POSITION[2] = max(-15, min(15, CAMERA_POSITION[2]))
+
 # Particle class
 class Particle:
     def __init__(self):
@@ -505,7 +638,7 @@ class Particle:
         # Initialize color with slight variation and random transparency
         base_color = 0.8
         variation = random.uniform(-0.1, 0.1)
-        transparency = random.uniform(0.5, 1.0)
+        transparency = random.uniform(0.9, 1.0)  # Changed from (0.5, 1.0) to (0.9, 1.0) for 0-10% transparency
         self.color = [base_color + variation, base_color + variation, base_color + variation, transparency]
         
         # Initialize rotation
@@ -826,9 +959,6 @@ while running:
         particle.update(wind)
         particle.draw()
     
-    # Rotate the view slightly to show 3D effect
-    glRotatef(0.1, 0, 1, 0)
-    
     # Draw UI
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
@@ -850,14 +980,14 @@ while running:
     color_text = f"Kolor nieba: {color_slider.value:.2f}"
     wind_text = f"Kierunek wiatru: {wind_slider.value:.0f}°"
     
-    draw_text(size_text, 10, 30)
-    draw_text("Przeciągnij suwak aby zmienić rozmiar", 10, 70)
-    draw_text(count_text, 10, 120)
-    draw_text("Przeciągnij suwak aby zmienić liczbę cząsteczek", 10, 160)
-    draw_text(color_text, 10, 180)
-    draw_text("Przeciągnij suwak aby zmienić kolor nieba", 10, 220)
-    draw_text(wind_text, 10, 240)
-    draw_text("Przeciągnij suwak aby zmienić kierunek wiatru", 10, 280)
+    draw_text(size_text, 0, PARTICLE_SIZE_TEXT)
+    
+    draw_text(count_text, 0, PARTICLE_AMOUNT_TEXT)
+    
+    draw_text(color_text, 0, SKY_COLOR_TEXT)
+    
+    draw_text(wind_text, 0, WIND_DIRECTION_TEXT)
+    
     
     glMatrixMode(GL_PROJECTION)
     glPopMatrix()
