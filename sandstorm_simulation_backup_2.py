@@ -109,6 +109,68 @@ TERRAIN_RESOLUTION = 50  # Number of vertices per side
 TERRAIN_HEIGHT = 2.0
 TERRAIN_SCALE = 0.5
 
+# Dune class
+class Dune:
+    def __init__(self, x, z, height, width):
+        self.x = x
+        self.z = z
+        self.height = height
+        self.width = width
+        # Add noise generator for more realistic dune shapes
+        self.noise_gen = OpenSimplex(seed=random.randint(1, 1000))
+
+    def get_height_at(self, x, z):
+        # Calculate distance from dune center
+        dx = x - self.x
+        dz = z - self.z
+        distance = math.sqrt(dx*dx + dz*dz)
+        
+        # Create a more realistic dune shape with noise
+        if distance < self.width:
+            # Base dune shape using a smoother function
+            base_height = self.height * math.exp(-(distance / (self.width * 0.6)) ** 2)
+            
+            # Add noise for more natural appearance
+            noise_x = (x + self.x) * 0.3
+            noise_z = (z + self.z) * 0.3
+            noise_factor = self.noise_gen.noise2(noise_x, noise_z) * 0.3
+            
+            # Add directional variation (dunes are often asymmetric)
+            direction_factor = 1.0 + (dx / self.width) * 0.2
+            
+            # Combine all factors for realistic dune shape
+            final_height = base_height * (1.0 + noise_factor) * direction_factor
+            
+            # Ensure height is positive and within reasonable bounds
+            return max(0, min(self.height * 1.5, final_height))
+        return 0
+
+# Create dunes
+dunes = [
+    Dune(-5, -5, 2, 3),
+    Dune(5, -3, 2.5, 4),
+    Dune(0, -8, 3, 5),
+    Dune(-8, 0, 2, 3),
+    Dune(8, 0, 2.5, 4),
+    # Dodanie większej liczby wydm dla bardziej realistycznego krajobrazu
+    Dune(-3, 3, 1.8, 2.5),
+    Dune(3, 5, 2.2, 3.2),
+    Dune(-6, -2, 1.5, 2.8),
+    Dune(6, -6, 2.8, 4.5),
+    Dune(0, 0, 1.2, 2.0),
+    Dune(-2, -7, 2.1, 3.1),
+    Dune(4, 2, 1.9, 2.7),
+    Dune(-4, 6, 2.3, 3.8),
+    Dune(7, 3, 1.7, 2.4),
+    Dune(-7, -4, 2.4, 3.6)
+]
+
+def get_terrain_height(x, z):
+    height = 0
+    for dune in dunes:
+        height += dune.get_height_at(x, z)
+    return height
+
 class Terrain:
     def __init__(self):
         self.vertices = []
@@ -125,19 +187,29 @@ class Terrain:
                 x = i / TERRAIN_RESOLUTION * TERRAIN_SCALE
                 y = j / TERRAIN_RESOLUTION * TERRAIN_SCALE
                 
+                # Get base terrain height from dunes
+                base_height = get_terrain_height(x * TERRAIN_SIZE, y * TERRAIN_SIZE)
+                
+                # Add noise for more natural terrain variation
                 # Large formations
-                height = noise_gen.noise2(x, y) * 3.0
+                noise_large = noise_gen.noise2(x, y) * 1.0
                 # Medium details
-                height += noise_gen.noise2(x * 2, y * 2) * 1.5
+                noise_medium = noise_gen.noise2(x * 3, y * 3) * 0.5
                 # Small details
-                height += noise_gen.noise2(x * 4, y * 4) * 0.3
+                noise_small = noise_gen.noise2(x * 8, y * 8) * 0.2
                 
-                # Dodanie losowych szczytów
-                if random.random() < 0.1:  # 10% szans na wyższy szczyt
-                    height *= 1.5
+                # Combine dune height with noise
+                height = base_height + noise_large + noise_medium + noise_small
                 
-                # Zwiększenie ogólnej wysokości terenu
-                self.height_map[i, j] = height * TERRAIN_HEIGHT * 1.5
+                # Add some random variations for more realistic appearance
+                if random.random() < 0.05:  # 5% chance for small variations
+                    height += random.uniform(-0.5, 0.5)
+                
+                # Ensure minimum height and smooth transitions
+                height = max(0, height)
+                
+                # Store in height map
+                self.height_map[i, j] = height
         
         # Generate vertices and colors
         for i in range(TERRAIN_RESOLUTION):
@@ -153,25 +225,39 @@ class Terrain:
                 # Calculate color based on height, position and random pattern
                 height_factor = (y + TERRAIN_HEIGHT) / (2 * TERRAIN_HEIGHT)
                 
-                # Bazowe kolory piasku z większym kontrastem
+                # Bazowe kolory piasku z większym kontrastem i gradientami
                 sand_colors = [
-                    [0.90, 0.85, 0.65],  # Jasny, ciepły piasek
-                    [0.75, 0.55, 0.35],  # Ciemny, ciepły piasek
-                    [0.65, 0.60, 0.45],  # Szary piasek
-                    [0.85, 0.70, 0.40],  # Pomarańczowy piasek
-                    [0.70, 0.80, 0.60],  # Zielonkawy piasek
-                    [0.80, 0.60, 0.30],  # Czerwony piasek
+                    [0.95, 0.90, 0.70],  # Jasny, ciepły piasek (szczyty)
+                    [0.85, 0.75, 0.55],  # Średni, ciepły piasek
+                    [0.75, 0.55, 0.35],  # Ciemny, ciepły piasek (doliny)
+                    [0.80, 0.65, 0.45],  # Pomarańczowy piasek
+                    [0.70, 0.60, 0.40],  # Czerwono-brązowy piasek
+                    [0.90, 0.80, 0.60],  # Jasny żółty piasek
                 ]
                 
-                # Wybór bazowego koloru z losową wariacją
-                base_color = random.choice(sand_colors)
-                variation = random.uniform(-0.2, 0.2)  # Zwiększona wariacja
+                # Wybór bazowego koloru z gradientem wysokości
+                if height_factor > 0.7:  # Szczyty wydm
+                    base_color = sand_colors[0]  # Jasny piasek
+                elif height_factor > 0.4:  # Środkowe części
+                    base_color = sand_colors[1]  # Średni piasek
+                else:  # Doliny i podstawy
+                    base_color = sand_colors[2]  # Ciemny piasek
                 
-                # Dodanie gradientu wysokości i losowej wariacji
+                # Dodanie gradientu wysokości z płynniejszymi przejściami
+                height_gradient = height_factor * 0.4  # Zmniejszony wpływ wysokości
+                
+                # Dodanie losowej wariacji dla naturalności
+                variation = random.uniform(-0.15, 0.15)  # Zmniejszona wariacja
+                
+                # Dodanie gradientu pozycji (wydmy mają różne kolory w różnych miejscach)
+                position_factor = (x + z) / (TERRAIN_SIZE * 2)  # Normalizacja pozycji
+                position_variation = math.sin(position_factor * math.pi * 2) * 0.1
+                
+                # Finalny kolor z gradientami
                 color = [
-                    base_color[0] + (height_factor * 0.3) + variation,  # Zwiększony wpływ wysokości
-                    base_color[1] + (height_factor * 0.25) + variation,
-                    base_color[2] + (height_factor * 0.2) + variation,
+                    base_color[0] + height_gradient + variation + position_variation,
+                    base_color[1] + height_gradient * 0.8 + variation + position_variation,
+                    base_color[2] + height_gradient * 0.6 + variation + position_variation,
                     1.0
                 ]
                 
@@ -504,40 +590,6 @@ class Wind:
         size_factor = 1.0 / (particle_size * 2)
         
         return (self.current_direction + turbulence) * self.strength * height_factor * size_factor
-
-# Dune class
-class Dune:
-    def __init__(self, x, z, height, width):
-        self.x = x
-        self.z = z
-        self.height = height
-        self.width = width
-
-    def get_height_at(self, x, z):
-        # Calculate distance from dune center
-        dx = x - self.x
-        dz = z - self.z
-        distance = math.sqrt(dx*dx + dz*dz)
-        
-        # Create a bell-shaped curve for the dune
-        if distance < self.width:
-            return self.height * math.cos(distance * math.pi / self.width) ** 2
-        return 0
-
-# Create dunes
-dunes = [
-    Dune(-5, -5, 2, 3),
-    Dune(5, -3, 2.5, 4),
-    Dune(0, -8, 3, 5),
-    Dune(-8, 0, 2, 3),
-    Dune(8, 0, 2.5, 4)
-]
-
-def get_terrain_height(x, z):
-    height = 0
-    for dune in dunes:
-        height += dune.get_height_at(x, z)
-    return height
 
 def get_camera_terrain_height(x, z):
     """Get terrain height at camera position, including terrain mesh"""
