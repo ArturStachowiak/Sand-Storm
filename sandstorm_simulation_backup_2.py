@@ -413,8 +413,20 @@ class Slider:
                 global CURRENT_PARTICLES, particles
                 new_count = int(self.value)
                 if new_count != CURRENT_PARTICLES:
+                    old_count = CURRENT_PARTICLES
                     CURRENT_PARTICLES = new_count
-                    particles = [Particle() for _ in range(CURRENT_PARTICLES)]
+                    
+                    if new_count > old_count:
+                        # Add more particles
+                        for _ in range(new_count - old_count):
+                            particles.append(Particle())
+                    elif new_count < old_count:
+                        # Remove excess particles
+                        particles = particles[:new_count]
+                    
+                    # Update transparency for all particles
+                    for particle in particles:
+                        particle.update_transparency()
             elif self.is_color_slider:
                 # Update sky colors
                 global SKY_COLOR, SUNSET_COLOR, HORIZON_COLOR
@@ -687,10 +699,17 @@ class Particle:
         # Initialize velocity
         self.velocity = np.array([0.0, 0.0, 0.0])
         
-        # Initialize color with slight variation and random transparency
+        # Initialize color with slight variation and transparency based on particle count
         base_color = 0.8
         variation = random.uniform(-0.1, 0.1)
-        transparency = random.uniform(0.9, 1.0)  # Changed from (0.5, 1.0) to (0.9, 1.0) for 0-10% transparency
+        
+        # Calculate transparency based on total particle count
+        # More particles = more transparency to avoid overcrowding
+        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
+        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
+        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
+        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        
         self.color = [base_color + variation, base_color + variation, base_color + variation, transparency]
         
         # Initialize rotation
@@ -832,6 +851,27 @@ class Particle:
         self.velocity = np.array([0.0, 0.0, 0.0])
         self.age = 0
         self.lifetime = random.uniform(0.8, 1.2)
+        # Update transparency based on current particle count
+        self.update_transparency()
+    
+    def update_transparency(self):
+        """Update particle transparency based on current particle count"""
+        # Calculate transparency based on total particle count
+        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
+        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
+        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
+        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        
+        # Update color with new transparency
+        self.color[3] = transparency
+        
+        # Update the color buffer with new transparency
+        for i in range(3, len(self.colors), 4):  # Update alpha channel (every 4th value)
+            self.colors[i] = transparency
+        
+        # Update the color buffer on GPU
+        glBindBuffer(GL_ARRAY_BUFFER, self.cbo)
+        glBufferData(GL_ARRAY_BUFFER, self.colors.nbytes, self.colors, GL_STATIC_DRAW)
 
 def draw_text(text, x, y):
     font = pygame.font.Font(None, 36)
@@ -861,6 +901,10 @@ for _ in range(CURRENT_PARTICLES // PARTICLES_PER_CLUSTER):
     # Generate particles for this cluster
     for _ in range(PARTICLES_PER_CLUSTER):
         particles.append(Particle())
+
+# Update transparency for all particles based on initial count
+for particle in particles:
+    particle.update_transparency()
 
 wind = Wind()
 sky = Sky()
