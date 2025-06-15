@@ -1,7 +1,7 @@
 import math
 import pygame
 from OpenGL.GL import *
-from config.settings import *
+from src.consts import *
 
 class Slider:
     def __init__(self, x, y, width, height, min_val, max_val, initial_val, is_count_slider=False, is_color_slider=False, is_wind_slider=False):

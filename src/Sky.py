@@ -1,7 +1,7 @@
 import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from config.settings import *
+from src.consts import *
 
 class Sky:
     def __init__(self):
