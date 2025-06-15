@@ -97,7 +97,7 @@ def draw_control_panel():
     
     sky_b_slider.draw()
     glColor3f(0.0, 0.0, 0.0)
-    draw_text(f"Sky Color: {int(sky_b_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
+    draw_text(f"Sky Color: Blue", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
 
     draw_text("Movement:", PANEL_PADDING, 650, font_size=18)
     draw_text("W - Forward", PANEL_PADDING, 670, font_size=18)
@@ -109,7 +109,7 @@ def draw_control_panel():
     draw_text("Shift - Down", PANEL_PADDING + 100, 710, font_size=18)
     draw_text("Space - Up", PANEL_PADDING + 100, 730, font_size=18)
     draw_text("Esc - Exit", PANEL_PADDING + 100, 750, font_size=18)
-    draw_text("Tab - Show/hide cursor", PANEL_PADDING + 100, 770, font_size=18)
+    draw_text("Tab - Show/hide cursor", PANEL_PADDING, 600, font_size=20)
 
     
     # Re-enable lighting and depth testing
