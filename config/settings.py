@@ -4,9 +4,9 @@ WINDOW_HEIGHT = 900
 WINDOW_TITLE = "Burza Piaskowa"
 
 # Global particle size settings
-MIN_PARTICLE_SIZE = 0.05
-MAX_PARTICLE_SIZE = 0.25
-SMALL_PARTICLE_MAX = 0.15
+MIN_PARTICLE_SIZE = 0.1
+MAX_PARTICLE_SIZE = 0.4
+SMALL_PARTICLE_MAX = 0.25
 SIZE_CHANGE_SPEED = 0.01
 
 # Particle count settings
@@ -40,9 +40,9 @@ COLOR_SLIDER_Y = 200
 COLOR_SLIDER_MIN = 0.0
 COLOR_SLIDER_MAX = 1.0
 
-# Wind settings
-WIND_DIRECTION = [0.5, 0.0, 0.0]  # Default wind direction
-WIND_STRENGTH = 1.0
+# Wind settings - zwiększona siła wiatru
+WIND_DIRECTION = [0.8, 0.0, 0.0]  # Zwiększona siła wiatru
+WIND_STRENGTH = 2.5  # Zwiększona siła wiatru
 
 # Wind direction slider settings
 WIND_SLIDER_X = 10

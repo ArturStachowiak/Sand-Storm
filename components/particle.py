@@ -13,31 +13,42 @@ class Particle:
             random.uniform(-10, 10)
         ])
         
-        # Generate size with 90% chance of being small
-        if random.random() < 0.9:
-            self.size = random.uniform(MIN_PARTICLE_SIZE, SMALL_PARTICLE_MAX)
+        # Losowy rozmiar cząsteczki (bardziej realistyczny)
+        if random.random() < 0.8:  # 80% szans na małe cząsteczki
+            self.size = random.uniform(MIN_PARTICLE_SIZE * 1.2, SMALL_PARTICLE_MAX * 2.0)  # Zwiększony rozmiar
         else:
-            self.size = random.uniform(SMALL_PARTICLE_MAX, MAX_PARTICLE_SIZE)
+            self.size = random.uniform(SMALL_PARTICLE_MAX * 1.5, MAX_PARTICLE_SIZE * 2.5)  # Zwiększony rozmiar
         
         # Initialize velocity
         self.velocity = np.array([0.0, 0.0, 0.0])
         
-        # Initialize color with slight variation and transparency based on particle count
-        base_color = 0.8
-        variation = random.uniform(-0.1, 0.1)
+        # Losowy kolor - pomarańczowy, żółty lub szary
+        color_type = random.choice(['orange', 'yellow', 'gray'])
+        if color_type == 'orange':
+            r = random.uniform(0.8, 1.0)
+            g = random.uniform(0.4, 0.7)
+            b = random.uniform(0.0, 0.3)
+        elif color_type == 'yellow':
+            r = random.uniform(0.9, 1.0)
+            g = random.uniform(0.7, 0.9)
+            b = random.uniform(0.0, 0.2)
+        else:  # gray
+            r = random.uniform(0.5, 0.8)
+            g = random.uniform(0.5, 0.8)
+            b = random.uniform(0.5, 0.8)
         
-        # Calculate transparency based on total particle count
-        # More particles = more transparency to avoid overcrowding
-        particle_count_factor = min(1.0, CURRENT_PARTICLES / 1000.0)  # Normalize to 0-1 range
-        base_transparency = 1.0 - (particle_count_factor * 0.7)  # 30% to 100% transparency
-        transparency = base_transparency + random.uniform(-0.1, 0.1)  # Add small variation
-        transparency = max(0.2, min(1.0, transparency))  # Clamp between 20% and 100%
+        # Losowa przezroczystość - mniej przezroczyste
+        transparency = random.uniform(0.6, 1.0)  # Zwiększona nieprzezroczystość
         
-        self.color = [base_color + variation, base_color + variation, base_color + variation, transparency]
+        self.color = [r, g, b, transparency]
         
-        # Initialize rotation
-        self.rotation = random.uniform(0, 360)
-        self.rotation_speed = random.uniform(-2, 2)
+        # Initialize rotation with more randomness
+        self.rotation_x = random.uniform(0, 360)
+        self.rotation_y = random.uniform(0, 360)
+        self.rotation_z = random.uniform(0, 360)
+        self.rotation_speed_x = random.uniform(-4, 4)
+        self.rotation_speed_y = random.uniform(-4, 4)
+        self.rotation_speed_z = random.uniform(-4, 4)
         
         # Initialize lifetime
         self.lifetime = random.uniform(0.8, 1.2)
@@ -50,7 +61,7 @@ class Particle:
         
         # Sphere parameters
         radius = self.size
-        segments = 8
+        segments = 6  # Mniej segmentów dla bardziej chropowatego wyglądu
         
         # Generate sphere vertices
         for i in range(segments + 1):
@@ -108,6 +119,11 @@ class Particle:
         glPushMatrix()
         glTranslatef(self.position[0], self.position[1], self.position[2])
         
+        # Apply random rotations
+        glRotatef(self.rotation_x, 1, 0, 0)
+        glRotatef(self.rotation_y, 0, 1, 0)
+        glRotatef(self.rotation_z, 0, 0, 1)
+        
         # Enable transparency
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -149,23 +165,28 @@ class Particle:
         # Get wind force at current position
         wind_force = wind.get_force(self.position, self.size)
         
-        # Apply wind force (inversely proportional to mass)
-        self.velocity += wind_force * (1.0 / self.size) * 0.01
+        # Apply wind force (inversely proportional to mass) - zwiększona siła
+        self.velocity += wind_force * (1.0 / self.size) * 0.03  # Zwiększona siła
         
         # Add some random turbulence (more for smaller particles)
         turbulence_scale = 1.0 / (self.size * 2)
         self.velocity += np.array([
-            random.uniform(-0.02, 0.02) * turbulence_scale,
-            random.uniform(-0.01, 0.01) * turbulence_scale,
-            random.uniform(-0.02, 0.02) * turbulence_scale
+            random.uniform(-0.05, 0.05) * turbulence_scale,  # Zwiększona turbulencja
+            random.uniform(-0.03, 0.03) * turbulence_scale,
+            random.uniform(-0.05, 0.05) * turbulence_scale
         ])
         
-        # Apply drag force (air resistance) - more for smaller particles
-        drag = 0.98 - (self.size * 0.1)
+        # Apply drag force (air resistance) - mniej tłumienia dla szybszego ruchu
+        drag = 0.99 - (self.size * 0.05)  # Mniej tłumienia
         self.velocity *= drag
         
         # Update position
         self.position += self.velocity
+        
+        # Update rotations
+        self.rotation_x += self.rotation_speed_x
+        self.rotation_y += self.rotation_speed_y
+        self.rotation_z += self.rotation_speed_z
         
         # Decrease lifetime
         self.lifetime -= 1
@@ -184,6 +205,15 @@ class Particle:
         self.velocity = np.array([0.0, 0.0, 0.0])
         self.age = 0
         self.lifetime = random.uniform(0.8, 1.2)
+        
+        # Reset rotations
+        self.rotation_x = random.uniform(0, 360)
+        self.rotation_y = random.uniform(0, 360)
+        self.rotation_z = random.uniform(0, 360)
+        self.rotation_speed_x = random.uniform(-4, 4)
+        self.rotation_speed_y = random.uniform(-4, 4)
+        self.rotation_speed_z = random.uniform(-4, 4)
+        
         # Update transparency based on current particle count
         self.update_transparency()
     

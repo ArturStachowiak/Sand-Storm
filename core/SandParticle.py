@@ -13,7 +13,20 @@ class SandParticle:
         self.active = True  # Whether the particle is still active in the simulation
         self.has_wrapped = False  # Whether the particle has already wrapped around the terrain
         self.lifetime = 0  # Current lifetime of the particle
-        self.size = size
+        
+        # Losowy rozmiar cząsteczki (bardziej realistyczny)
+        self.size = size * random.uniform(3, 5)  # Zwiększony rozmiar
+        self.color = (1.0, random.uniform(0.4, 0.78), 0.26, random.uniform(0.7, 1.0))
+        # Losowy kolor - pomarańczowy, żółty lub szary
+
+        
+        # Losowa rotacja dla bardziej realistycznego wyglądu
+        self.rotation_x = random.uniform(0, 360)
+        self.rotation_y = random.uniform(0, 360)
+        self.rotation_z = random.uniform(0, 360)
+        self.rotation_speed_x = random.uniform(-5, 5)
+        self.rotation_speed_y = random.uniform(-5, 5)
+        self.rotation_speed_z = random.uniform(-5, 5)
 
     def update(self, wind: pygame.Vector3, delta_time: float, mass: float = 1.0):
         """
@@ -25,19 +38,24 @@ class SandParticle:
         """
         self.mass = mass
         
-        # Add upward component to wind and increase its strength
-        r = random.uniform(-3, 3)
-        wind_with_upward = pygame.Vector3(wind.x * 2.0, wind.y + r, wind.z + r)
+        # Zwiększona siła wiatru dla szybszego ruchu
+        r = random.uniform(-5, 5)
+        wind_with_upward = pygame.Vector3(wind.x * 4.0, wind.y + r, wind.z + r)
         
         # Apply wind force with mass consideration
         self.acceleration = wind_with_upward / self.mass
         
-        # Update velocity with damping
+        # Update velocity with damping (mniej tłumienia dla szybszego ruchu)
         self.velocity += self.acceleration * delta_time
-        self.velocity *= 0.95  # Reduced air resistance for more dynamic movement
+        self.velocity *= 0.98  # Mniej tłumienia powietrza
         
         # Update position
         self.position += self.velocity * delta_time
+        
+        # Update rotations
+        self.rotation_x += self.rotation_speed_x * delta_time * 15
+        self.rotation_y += self.rotation_speed_y * delta_time * 15
+        self.rotation_z += self.rotation_speed_z * delta_time * 15
         
         # Update lifetime
         self.lifetime += delta_time
@@ -51,17 +69,23 @@ class SandParticle:
         glPushMatrix()
         glTranslatef(self.position.x, self.position.y, self.position.z)
         
-        # Calculate color based on color_value
-        # Interpolate between yellow (0.0) and orange-red (1.0)
-        r = 1.0
-        g = 0.8 - (0.8 - 0.4) * color_value
-        b = 0.0 + 0.2 * color_value
+        # Apply random rotations
+        glRotatef(self.rotation_x, 1, 0, 0)
+        glRotatef(self.rotation_y, 0, 1, 0)
+        glRotatef(self.rotation_z, 0, 0, 1)
         
-        # Set color
-        glColor4f(r, g, b, 1.0)
+        # Enable blending for transparency
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         
-        # Draw particle as a small sphere
+        # Set color with transparency
+        glColor4f(self.color[0], self.color[1], self.color[2], self.color[3])
+        
+        # Draw particle as a small sphere with random size
         quad = gluNewQuadric()
-        gluSphere(quad, 0.15, 8, 8)
+        gluSphere(quad, self.size, 6, 6)  # Mniej segmentów dla bardziej chropowatego wyglądu
+        
+        # Disable blending
+        glDisable(GL_BLEND)
         
         glPopMatrix() 
