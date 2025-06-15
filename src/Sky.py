@@ -23,11 +23,11 @@ class Sky:
         self.sunset_color = list(SUNSET_COLOR)
         self.horizon_color = list(HORIZON_COLOR)
         
-    def update_colors(self, r, g, b):
+    def update_colors(self, b):
         """Update sky colors based on RGB values (0-255)"""
         # Convert from 0-255 to 0-1 range
-        r = r / 255.0
-        g = g / 255.0
+        r = 30 / 255.0
+        g = 10 / 255.0
         b = b / 255.0
         
         # Update main sky color

@@ -40,17 +40,16 @@ SLIDER_SPACING, GROUP_SPACING, START_Y = calculate_spacing()
 # Initialize sliders
 # Wind parameters
 wind_slider = Slider(PANEL_PADDING, START_Y, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 360, 0, is_wind_slider=True)
-wind_strength_slider = Slider(PANEL_PADDING, START_Y + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 10.0, 2.0)
+wind_strength_slider = Slider(PANEL_PADDING, START_Y + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 10.0, 5.0)
 
 # Particle parameters
-particle_count_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 100000, 1000, is_count_slider=True)
-particle_mass_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 2.0, 1.0)
+particle_count_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 10000, 1000, is_count_slider=True)
+particle_mass_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.01, 1.0, 0.5)
 particle_lifetime_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 1.0, 10.0, 1.0)
 
 # Visual parameters
-sky_r_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 26, is_sky_rgb=True)  # 0.1 * 255
-sky_g_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 51, is_sky_rgb=True)  # 0.2 * 255
-sky_b_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 3, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 102, is_sky_rgb=True)  # 0.4 * 255
+
+sky_b_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 0, is_sky_rgb=True)  # 0.4 * 255
 
 def draw_control_panel():
     # Disable lighting for UI elements
@@ -94,28 +93,23 @@ def draw_control_panel():
     glColor3f(0.0, 0.0, 0.0)  # Black color for text
     draw_text("Visual Parameters", PANEL_PADDING, START_Y + GROUP_SPACING * 2, font_size=24)
     
-    # Sky color sliders
-    sky_r_slider.draw()
-    glColor3f(0.0, 0.0, 0.0)
-    draw_text(f"Sky Red: {int(sky_r_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
-    sky_g_slider.draw()
-    glColor3f(0.0, 0.0, 0.0)
-    draw_text(f"Sky Green: {int(sky_g_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2 - 8, font_size=18)
+    # Sky color slider
+    
     sky_b_slider.draw()
     glColor3f(0.0, 0.0, 0.0)
-    draw_text(f"Sky Blue: {int(sky_b_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 3 - 8, font_size=18)
+    draw_text(f"Sky Color: {int(sky_b_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
 
-    draw_text("Sterowanie:", PANEL_PADDING, 650, font_size=18)
-    draw_text("W - Przód", PANEL_PADDING, 670, font_size=18)
-    draw_text("A - Lewo", PANEL_PADDING, 690, font_size=18)
-    draw_text("S - Tył", PANEL_PADDING, 710, font_size=18)
-    draw_text("D - Prawo", PANEL_PADDING, 730, font_size=18)
-    draw_text("Q - obrót w lewo", PANEL_PADDING + 100, 670, font_size=18)
-    draw_text("E - obrót w prawo", PANEL_PADDING + 100, 690, font_size=18)
-    draw_text("Shift - W dół", PANEL_PADDING + 100, 710, font_size=18)
-    draw_text("Space - W górę", PANEL_PADDING + 100, 730, font_size=18)
-    draw_text("Esc - Wyjście", PANEL_PADDING + 100, 750, font_size=18)
-    draw_text("Tab - Pokaż/ukryj kursor", PANEL_PADDING + 100, 770, font_size=18)
+    draw_text("Movement:", PANEL_PADDING, 650, font_size=18)
+    draw_text("W - Forward", PANEL_PADDING, 670, font_size=18)
+    draw_text("A - Left", PANEL_PADDING, 690, font_size=18)
+    draw_text("S - Back", PANEL_PADDING, 710, font_size=18)
+    draw_text("D - Right", PANEL_PADDING, 730, font_size=18)
+    draw_text("Q - Left turn", PANEL_PADDING + 100, 670, font_size=18)
+    draw_text("E - Right turn", PANEL_PADDING + 100, 690, font_size=18)
+    draw_text("Shift - Down", PANEL_PADDING + 100, 710, font_size=18)
+    draw_text("Space - Up", PANEL_PADDING + 100, 730, font_size=18)
+    draw_text("Esc - Exit", PANEL_PADDING + 100, 750, font_size=18)
+    draw_text("Tab - Show/hide cursor", PANEL_PADDING + 100, 770, font_size=18)
 
     
     # Re-enable lighting and depth testing
@@ -207,8 +201,7 @@ while not done:
         particle_count_slider.handle_event(event)
         particle_mass_slider.handle_event(event)
         particle_lifetime_slider.handle_event(event)
-        sky_r_slider.handle_event(event)
-        sky_g_slider.handle_event(event)
+
         sky_b_slider.handle_event(event)
         
         # Update sand storm parameters based on slider values
@@ -240,7 +233,7 @@ while not done:
     sand_storm.draw()
     
     # Update sky colors
-    sky.update_colors(sky_r_slider.value, sky_g_slider.value, sky_b_slider.value)
+    sky.update_colors(sky_b_slider.value)
     
     # Draw ground and terrain
     sky.draw()
