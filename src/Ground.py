@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from OpenGL.GL import *
-from config.settings import *
+from src.consts import *
 
 class Ground:
     def __init__(self):

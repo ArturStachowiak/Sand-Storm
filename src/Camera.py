@@ -1,7 +1,6 @@
 import pygame
 import math
 import numpy as np
-from core.Transform import *
 
 class Camera:
     def __init__(self, fovy, aspect, near, far):

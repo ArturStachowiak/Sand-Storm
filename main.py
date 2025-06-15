@@ -3,13 +3,14 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from core.Camera import *
-from utils.Settings import *
-from core.SandStorm import SandStorm
-from components.ground import Ground
-from components.terrain import Terrain
-from components.sky import Sky
-from ui.slider import Slider, draw_text
+from src.Camera import *
+from src.consts import *
+from src.SandStorm import SandStorm
+from src.Ground import Ground
+from src.Terrain import Terrain
+from src.Sky import Sky
+from src.Slider import Slider, draw_text
+import random
 
 # Performance settings
 FPS = 60
@@ -96,6 +97,19 @@ def draw_control_panel():
     sky_intensity_slider.draw()
     glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
     draw_text("Sky Intensity", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2 - 8, font_size=18)
+
+    draw_text("Sterowanie:", PANEL_PADDING, 650, font_size=18)
+    draw_text("W - Przód", PANEL_PADDING, 670, font_size=18)
+    draw_text("A - Lewo", PANEL_PADDING, 690, font_size=18)
+    draw_text("S - Tył", PANEL_PADDING, 710, font_size=18)
+    draw_text("D - Prawo", PANEL_PADDING, 730, font_size=18)
+    draw_text("Q - obrót w lewo", PANEL_PADDING + 100, 670, font_size=18)
+    draw_text("E - obrót w prawo", PANEL_PADDING + 100, 690, font_size=18)
+    draw_text("Shift - W dół", PANEL_PADDING + 100, 710, font_size=18)
+    draw_text("Space - W górę", PANEL_PADDING + 100, 730, font_size=18)
+    draw_text("Esc - Wyjście", PANEL_PADDING + 100, 750, font_size=18)
+    draw_text("Tab - Pokaż/ukryj kursor", PANEL_PADDING + 100, 770, font_size=18)
+
     
     # Re-enable lighting and depth testing
     glEnable(GL_LIGHTING)

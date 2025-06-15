@@ -3,7 +3,7 @@ import random
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from opensimplex import OpenSimplex
-from config.settings import *
+from src.consts import *
 
 class Terrain:
     def __init__(self):

@@ -59,3 +59,11 @@ TERRAIN_SIZE = 40
 TERRAIN_RESOLUTION = 30
 TERRAIN_HEIGHT = 2.0 
 TERRAIN_SCALE = 0.5  
+
+# Rozmiar okna w pikselach:
+# lewo, prawo, góra, dół.
+window_dimensions = (0, 1400, 0, 800)
+# Rozdzielczość projekcji Ortho2D służącej do rysowania GUI:
+# lewo, prawo, góra, dół.
+gui_dimensions = (0, 1400, 0, 800)
+

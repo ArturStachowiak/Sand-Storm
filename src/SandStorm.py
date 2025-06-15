@@ -1,7 +1,7 @@
 import pygame
 import random
-from config.settings import TERRAIN_SIZE
-from core.SandParticle import SandParticle
+from src.consts import TERRAIN_SIZE
+from src.SandParticle import SandParticle
 
 class SandStorm:
     def __init__(self, position: pygame.Vector3, num_particles: int = 100, max_particles: int = 5000):
