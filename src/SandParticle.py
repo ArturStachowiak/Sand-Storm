@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
+import random
 
 class SandParticle:
     def __init__(self, position: pygame.Vector3, size: float):
@@ -25,7 +26,8 @@ class SandParticle:
         self.mass = mass
         
         # Add upward component to wind and increase its strength
-        wind_with_upward = pygame.Vector3(wind.x * 2.0, wind.y + 0.1, wind.z)
+        r = random.uniform(-3, 3)
+        wind_with_upward = pygame.Vector3(wind.x * 2.0, wind.y + r, wind.z + r)
         
         # Apply wind force with mass consideration
         self.acceleration = wind_with_upward / self.mass
@@ -60,6 +62,6 @@ class SandParticle:
         
         # Draw particle as a small sphere
         quad = gluNewQuadric()
-        gluSphere(quad, 0.08, 8, 8)
+        gluSphere(quad, 0.15, 8, 8)
         
         glPopMatrix() 

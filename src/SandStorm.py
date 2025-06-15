@@ -59,6 +59,7 @@ class SandStorm:
         """
         if wind_strength is not None:
             self.wind_strength = wind_strength
+            self.MAX_VERTICES_PER_FRAME = round(wind_strength)*30
         if wind_turbulence is not None:
             self.wind_turbulence = wind_turbulence
         if particle_mass is not None:
