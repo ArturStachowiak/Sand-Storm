@@ -9,60 +9,79 @@ class Sky:
         self.sun_radius = 1.0
         self.sun_color = (1.0, 0.7, 0.3, 1.0)  # Orange color for sun
         
+        # Initialize sky colors
+        self.sky_color = list(SKY_COLOR)
+        self.sunset_color = list(SUNSET_COLOR)
+        self.horizon_color = list(HORIZON_COLOR)
+        
+    def update_colors(self, r, g, b):
+        """Update sky colors based on RGB values (0-255)"""
+        # Convert from 0-255 to 0-1 range
+        r = r / 255.0
+        g = g / 255.0
+        b = b / 255.0
+        
+        # Update main sky color
+        self.sky_color = [r, g, b]
+        
+        # Update sunset and horizon colors based on sky color
+        self.sunset_color = [min(1.0, r + 0.7), min(1.0, g + 0.2), min(1.0, b - 0.2)]
+        self.horizon_color = [min(1.0, r + 0.8), min(1.0, g + 0.4), min(1.0, b - 0.1)]
+        
     def draw(self):
         # Draw sky gradient
         glBegin(GL_QUADS)
         
         # Back wall (sky gradient)
         # Top of sky
-        glColor3f(*SKY_COLOR)
+        glColor3f(*self.sky_color)
         glVertex3f(-20, 20, -20)
         glVertex3f(20, 20, -20)
         glVertex3f(20, 0, -20)
         glVertex3f(-20, 0, -20)
         
         # Middle of sky (sunset colors)
-        glColor3f(*SUNSET_COLOR)
+        glColor3f(*self.sunset_color)
         glVertex3f(-20, 0, -20)
         glVertex3f(20, 0, -20)
         glVertex3f(20, -2, -20)
         glVertex3f(-20, -2, -20)
         
         # Left wall
-        glColor3f(*SKY_COLOR)
+        glColor3f(*self.sky_color)
         glVertex3f(-20, 20, -20)
         glVertex3f(-20, 20, 20)
         glVertex3f(-20, 0, 20)
         glVertex3f(-20, 0, -20)
         
-        glColor3f(*SUNSET_COLOR)
+        glColor3f(*self.sunset_color)
         glVertex3f(-20, 0, -20)
         glVertex3f(-20, 0, 20)
         glVertex3f(-20, -2, 20)
         glVertex3f(-20, -2, -20)
         
         # Right wall
-        glColor3f(*SKY_COLOR)
+        glColor3f(*self.sky_color)
         glVertex3f(20, 20, -20)
         glVertex3f(20, 20, 20)
         glVertex3f(20, 0, 20)
         glVertex3f(20, 0, -20)
         
-        glColor3f(*SUNSET_COLOR)
+        glColor3f(*self.sunset_color)
         glVertex3f(20, 0, -20)
         glVertex3f(20, 0, 20)
         glVertex3f(20, -2, 20)
         glVertex3f(20, -2, -20)
         
         # Top wall (ceiling)
-        glColor3f(*SKY_COLOR)
+        glColor3f(*self.sky_color)
         glVertex3f(-20, 20, -20)
         glVertex3f(20, 20, -20)
         glVertex3f(20, 20, 20)
         glVertex3f(-20, 20, 20)
         
         # Bottom wall (floor sky reflection)
-        glColor3f(*HORIZON_COLOR)
+        glColor3f(*self.horizon_color)
         glVertex3f(-20, -2, -20)
         glVertex3f(20, -2, -20)
         glVertex3f(20, -2, 20)

@@ -28,7 +28,7 @@ def calculate_spacing():
     
     # Calculate spacing as percentages of screen height
     slider_spacing = int(screen_height * 0.06)  # 10% of screen height
-    group_spacing = int(screen_height * 0.25)  # 25% of screen height
+    group_spacing = int(screen_height * 0.22)  # 25% of screen height
     start_y = int(screen_height * 0.12)  # 12% from top
     
     return slider_spacing, group_spacing, start_y
@@ -47,8 +47,9 @@ particle_mass_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SP
 particle_lifetime_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 1.0, 10.0, 1.0)
 
 # Visual parameters
-particle_color_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.0, 1.0, 0.5)
-sky_intensity_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 2.0, 1.0)
+sky_r_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 26, is_sky_rgb=True)  # 0.1 * 255
+sky_g_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 51, is_sky_rgb=True)  # 0.2 * 255
+sky_b_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 3, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 255, 102, is_sky_rgb=True)  # 0.4 * 255
 
 def draw_control_panel():
     # Disable lighting for UI elements
@@ -91,12 +92,17 @@ def draw_control_panel():
     # Visual parameters
     glColor3f(0.0, 0.0, 0.0)  # Black color for text
     draw_text("Visual Parameters", PANEL_PADDING, START_Y + GROUP_SPACING * 2, font_size=24)
-    particle_color_slider.draw()
-    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
-    draw_text("Particle Color", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING - 8, font_size=18)
-    sky_intensity_slider.draw()
-    glColor3f(0.0, 0.0, 0.0)  # Reset to black after slider
-    draw_text("Sky Intensity", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2 - 8, font_size=18)
+    
+    # Sky color sliders
+    sky_r_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)
+    draw_text(f"Sky Red: {int(sky_r_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
+    sky_g_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)
+    draw_text(f"Sky Green: {int(sky_g_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 2 - 8, font_size=18)
+    sky_b_slider.draw()
+    glColor3f(0.0, 0.0, 0.0)
+    draw_text(f"Sky Blue: {int(sky_b_slider.value)}", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 3 - 8, font_size=18)
 
     draw_text("Sterowanie:", PANEL_PADDING, 650, font_size=18)
     draw_text("W - Przód", PANEL_PADDING, 670, font_size=18)
@@ -204,23 +210,21 @@ while not done:
         particle_count_slider.handle_event(event)
         particle_mass_slider.handle_event(event)
         particle_lifetime_slider.handle_event(event)
-        particle_color_slider.handle_event(event)
-        sky_intensity_slider.handle_event(event)
+        sky_r_slider.handle_event(event)
+        sky_g_slider.handle_event(event)
+        sky_b_slider.handle_event(event)
         
         # Update sand storm parameters based on slider values
         angle = math.radians(wind_slider.value)
         wind_direction = pygame.Vector3(math.cos(angle), 0, math.sin(angle)) * wind_strength_slider.value
         sand_storm.set_wind(wind_direction)
         sand_storm.set_max_particles(int(particle_count_slider.value))
-
         
         # Update all other parameters
         sand_storm.set_parameters(
             wind_strength=wind_strength_slider.value,
             particle_mass=particle_mass_slider.value,
             particle_lifetime=particle_lifetime_slider.value,
-            particle_color=particle_color_slider.value,
-            sky_intensity=sky_intensity_slider.value
         )
 
     # Clear screen and depth buffer
@@ -237,6 +241,9 @@ while not done:
     dt = min(clock.get_time() / 1000.0, 1/30)  # Cap delta time to prevent large jumps
     sand_storm.update(dt, terrain)
     sand_storm.draw()
+    
+    # Update sky colors
+    sky.update_colors(sky_r_slider.value, sky_g_slider.value, sky_b_slider.value)
     
     # Draw ground and terrain
     sky.draw()

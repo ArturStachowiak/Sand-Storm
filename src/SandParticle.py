@@ -15,7 +15,7 @@ class SandParticle:
         self.lifetime = 0  # Current lifetime of the particle
         
         # Losowy rozmiar cząsteczki (bardziej realistyczny)
-        self.size = size * random.uniform(3, 5)  # Zwiększony rozmiar
+        self.size = size * random.uniform(3, 10)  # Zwiększony rozmiar
         self.color = (1.0, random.uniform(0.4, 0.78), 0.26, random.uniform(0.7, 1.0))
         # Losowy kolor - pomarańczowy, żółty lub szary
 

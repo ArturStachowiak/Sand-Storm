@@ -4,7 +4,7 @@ from OpenGL.GL import *
 from src.consts import *
 
 class Slider:
-    def __init__(self, x, y, width, height, min_val, max_val, initial_val, is_count_slider=False, is_color_slider=False, is_wind_slider=False):
+    def __init__(self, x, y, width, height, min_val, max_val, initial_val, is_count_slider=False, is_color_slider=False, is_wind_slider=False, is_sky_rgb=False):
         self.x = x
         self.y = y
         self.width = width
@@ -17,6 +17,7 @@ class Slider:
         self.is_count_slider = is_count_slider
         self.is_color_slider = is_color_slider
         self.is_wind_slider = is_wind_slider
+        self.is_sky_rgb = is_sky_rgb
         self.sand_storm = None  # Reference to SandStorm instance
         
     def set_sand_storm(self, sand_storm):
@@ -138,8 +139,8 @@ class Slider:
                     self.sand_storm.particles = []
                     for _ in range(new_count):
                         self.sand_storm.add_particles(1, pygame.Vector3(0, 14, 0))
-            elif self.is_color_slider:
-                # Update sky colors
+            elif self.is_color_slider and not self.is_sky_rgb:
+                # Update sky colors (only for the old color slider, not for RGB sliders)
                 global SKY_COLOR, SUNSET_COLOR, HORIZON_COLOR
                 t = self.value
                 # Interpolate between dark blue and orange-red
