@@ -91,13 +91,13 @@ def draw_control_panel():
 
     # Visual parameters
     glColor3f(0.0, 0.0, 0.0)  # Black color for text
-    draw_text("Visual Parameters", PANEL_PADDING, START_Y + GROUP_SPACING * 2, font_size=24)
+    draw_text("Sky Color", PANEL_PADDING, START_Y + GROUP_SPACING * 2, font_size=24)
     
     # Sky color slider
     
     sky_b_slider.draw()
     glColor3f(0.0, 0.0, 0.0)
-    draw_text(f"Sky Color: Blue", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
+    draw_text(f"Blue", PANEL_PADDING, START_Y + GROUP_SPACING * 2 + SLIDER_SPACING * 1 - 8, font_size=18)
 
     draw_text("Movement:", PANEL_PADDING, 650, font_size=18)
     draw_text("W - Forward", PANEL_PADDING, 670, font_size=18)
