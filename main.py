@@ -39,7 +39,7 @@ SLIDER_SPACING, GROUP_SPACING, START_Y = calculate_spacing()
 # Initialize sliders
 # Wind parameters
 wind_slider = Slider(PANEL_PADDING, START_Y, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 360, 0, is_wind_slider=True)
-wind_strength_slider = Slider(PANEL_PADDING, START_Y + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 5.0, 2.0)
+wind_strength_slider = Slider(PANEL_PADDING, START_Y + SLIDER_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0.1, 10.0, 2.0)
 
 # Particle parameters
 particle_count_slider = Slider(PANEL_PADDING, START_Y + GROUP_SPACING, SLIDER_WIDTH, SLIDER_HEIGHT, 0, 100000, 1000, is_count_slider=True)

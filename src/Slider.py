@@ -29,9 +29,9 @@ class Slider:
         
         # Format the value based on slider type
         if self.is_wind_slider:
-            value_text = f"{int(self.value)}°"
+            value_text = f"{round(float(self.value),2)}°"
         else:
-            value_text = f"{int(self.value)}"
+            value_text = f"{round(float(self.value),2)}"
             
         text_surface = font.render(value_text, True, (0, 0, 0))  # Changed to black color
         text_data = pygame.image.tostring(text_surface, "RGBA", True)

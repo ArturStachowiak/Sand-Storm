@@ -3,6 +3,7 @@ import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import random
+import math
 
 class SandParticle:
     def __init__(self, position: pygame.Vector3, size: float):
@@ -36,7 +37,7 @@ class SandParticle:
             delta_time: Time since last update
             mass: Particle mass affecting its movement
         """
-        self.mass = mass
+        self.mass = mass*math.sqrt(self.size)*2
         
         # Zwiększona siła wiatru dla szybszego ruchu
         r = random.uniform(-5, 5)
