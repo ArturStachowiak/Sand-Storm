@@ -12,6 +12,8 @@ from src.Sky import Sky
 from src.Slider import Slider, draw_text
 import random
 
+
+
 # Performance settings
 FPS = 60
 
@@ -23,13 +25,12 @@ SLIDER_HEIGHT = 20
 
 # Calculate dynamic spacing based on screen height
 def calculate_spacing():
-    # Get screen height from window dimensions
     screen_height = math.fabs(window_dimensions[3] - window_dimensions[2])
     
     # Calculate spacing as percentages of screen height
-    slider_spacing = int(screen_height * 0.06)  # 10% of screen height
-    group_spacing = int(screen_height * 0.22)  # 25% of screen height
-    start_y = int(screen_height * 0.12)  # 12% from top
+    slider_spacing = int(screen_height * 0.06) 
+    group_spacing = int(screen_height * 0.22)  
+    start_y = int(screen_height * 0.12)  
     
     return slider_spacing, group_spacing, start_y
 
@@ -160,26 +161,22 @@ screen_height = math.fabs(window_dimensions[3] - window_dimensions[2])
 pygame.display.set_caption('Sand Storm Simulation')
 screen = pygame.display.set_mode((screen_width, screen_height), DOUBLEBUF | OPENGL)
 
-# Create camera
+
 camera = Camera(60, (screen_width / screen_height), 0.01, 1000.0)
 
-# Create sky
 sky = Sky()
 
-# Create sand storm with optimized initial settings
 sand_storm = SandStorm(pygame.Vector3(0, 14, 0), num_particles=0, max_particles=particle_count_slider.value)
 
-# Create ground
 ground = Ground()
 
-# Create terrain
 terrain = Terrain()
 
 # Main game loop
 clock = pygame.time.Clock()
 done = False
 
-# Enable mouse capture
+
 pygame.event.set_grab(True)
 pygame.mouse.set_visible(False)
 pygame.mouse.set_pos(screen_width // 2, screen_height // 2)
@@ -230,15 +227,15 @@ while not done:
     # Clear screen and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     
-    # Update camera
+    
     camera.update()
 
-    # Set up 3D view
+    
     glPushMatrix()
     set_3d()
     
     # Update and draw sand storm with optimized delta time
-    dt = min(clock.get_time() / 1000.0, 1/30)  # Cap delta time to prevent large jumps
+    dt = min(clock.get_time() / 1000.0, 1/30)  
     sand_storm.update(dt, terrain)
     sand_storm.draw()
     
@@ -252,13 +249,10 @@ while not done:
     
     glPopMatrix()
 
-    # Set up 2D view for UI
+    
     set_2d()
-
-    # Draw control panel
     draw_control_panel()
 
-    # Update display
     pygame.display.flip()
     clock.tick(FPS)
 

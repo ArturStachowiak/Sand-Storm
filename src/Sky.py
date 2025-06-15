@@ -3,6 +3,15 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from src.consts import *
 
+"""
+This is a class describing the sky.
+It is used to:
+- draw the sky
+- update the sky colors
+- draw the sky gradient
+- draw the sun
+- draw the sun glow effect
+"""
 class Sky:
     def __init__(self):
         self.sun_position = np.array([-5.0, 15.0, -15.0])

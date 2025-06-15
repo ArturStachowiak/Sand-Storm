@@ -3,6 +3,19 @@ import random
 from src.consts import TERRAIN_SIZE
 from src.SandParticle import SandParticle
 
+"""
+This is a class describing the sandstorm.
+It is used to:
+- simulate the movement of sand particles in the sandstorm depending on the wind
+- draw the sand particles in the sandstorm
+- update the sand particles in the sandstorm
+- add new particles to the sandstorm
+- remove particles that went too far vertically or hit walls twice
+- generate new particles from terrain if provided
+- update the wind direction and strength
+- update the parameters of the sandstorm
+- update the particle properties
+"""
 class SandStorm:
     def __init__(self, position: pygame.Vector3, num_particles: int = 100, max_particles: int = 5000):
         self.position = position

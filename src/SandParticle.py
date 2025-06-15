@@ -4,24 +4,31 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import random
 import math
-
+"""
+This is a class describing a single sand particle.
+It is used to:
+- simulate the movement of sand particles in the sandstorm
+- draw the sand particles in the sandstorm with random parameters
+- update the sand particles in the sandstorm
+- draw the sand particles in the sandstorm
+"""
 class SandParticle:
     def __init__(self, position: pygame.Vector3, size: float):
         self.position = position
         self.velocity = pygame.Vector3(0, 0, 0)
         self.acceleration = pygame.Vector3(0, 0, 0)
-        self.mass = 1  # Default mass
+        self.mass = 1  
         self.active = True  # Whether the particle is still active in the simulation
         self.has_wrapped = False  # Whether the particle has already wrapped around the terrain
-        self.lifetime = 0  # Current lifetime of the particle
+        self.lifetime = 0  
         
-        # Losowy rozmiar cząsteczki (bardziej realistyczny)
+        # random size and color
         self.size = size * random.uniform(3, 10)  # Zwiększony rozmiar
         self.color = (1.0, random.uniform(0.4, 0.78), 0.26, random.uniform(0.7, 1.0))
-        # Losowy kolor - pomarańczowy, żółty lub szary
+        
 
         
-        # Losowa rotacja dla bardziej realistycznego wyglądu
+        # random rotation
         self.rotation_x = random.uniform(0, 360)
         self.rotation_y = random.uniform(0, 360)
         self.rotation_z = random.uniform(0, 360)
@@ -39,16 +46,16 @@ class SandParticle:
         """
         self.mass = mass*math.sqrt(self.size)*2
         
-        # Zwiększona siła wiatru dla szybszego ruchu
+        
         r = random.uniform(-5, 5)
         wind_with_upward = pygame.Vector3(wind.x * 4.0, wind.y + r, wind.z + r)
         
         # Apply wind force with mass consideration
         self.acceleration = wind_with_upward / self.mass
         
-        # Update velocity with damping (mniej tłumienia dla szybszego ruchu)
+        # Update velocity with damping
         self.velocity += self.acceleration * delta_time
-        self.velocity *= 0.98  # Mniej tłumienia powietrza
+        self.velocity *= 0.98  
         
         # Update position
         self.position += self.velocity * delta_time
@@ -84,7 +91,7 @@ class SandParticle:
         
         # Draw particle as a small sphere with random size
         quad = gluNewQuadric()
-        gluSphere(quad, self.size, 6, 6)  # Mniej segmentów dla bardziej chropowatego wyglądu
+        gluSphere(quad, self.size, 6, 6)
         
         # Disable blending
         glDisable(GL_BLEND)

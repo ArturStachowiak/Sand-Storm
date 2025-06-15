@@ -40,9 +40,9 @@ COLOR_SLIDER_Y = 200
 COLOR_SLIDER_MIN = 0.0
 COLOR_SLIDER_MAX = 1.0
 
-# Wind settings - zwiększona siła wiatru
-WIND_DIRECTION = [0.8, 0.0, 0.0]  # Zwiększona siła wiatru
-WIND_STRENGTH = 2.5  # Zwiększona siła wiatru
+# Wind settings 
+WIND_DIRECTION = [0.8, 0.0, 0.0]  
+WIND_STRENGTH = 2.5  
 
 # Wind direction slider settings
 WIND_SLIDER_X = 10
@@ -60,10 +60,8 @@ TERRAIN_RESOLUTION = 30
 TERRAIN_HEIGHT = 2.0 
 TERRAIN_SCALE = 0.5  
 
-# Rozmiar okna w pikselach:
-# lewo, prawo, góra, dół.
+
 window_dimensions = (0, 1400, 0, 800)
-# Rozdzielczość projekcji Ortho2D służącej do rysowania GUI:
-# lewo, prawo, góra, dół.
+
 gui_dimensions = (0, 1400, 0, 800)
 

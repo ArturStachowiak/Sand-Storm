@@ -1,7 +1,13 @@
 import pygame
 import math
 import numpy as np
-
+"""
+This is a class describing a camera. We took this file from our laboratories
+It is used to:
+- update the view matrix
+- get the view matrix
+- get the projection matrix
+"""
 class Camera:
     def __init__(self, fovy, aspect, near, far):
         # Macierz projekcji perspektywicznej

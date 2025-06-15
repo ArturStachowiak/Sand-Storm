@@ -5,6 +5,14 @@ from OpenGL.GLU import *
 from opensimplex import OpenSimplex
 from src.consts import *
 
+"""
+This is a class describing the terrain.
+It is used to:
+- generate the height map
+- generate the vertices and colors for the terrain
+- draw the terrain
+- get the vertices of the terrain
+"""
 class Terrain:
     def __init__(self):
         self.vertices = []
@@ -28,11 +36,11 @@ class Terrain:
                 # Small details
                 height += noise_gen.noise2(x * 4, y * 4) * 0.3
                 
-                # Dodanie losowych szczytów
-                if random.random() < 0.1:  # 10% szans na wyższy szczyt
+                # adding random peaks
+                if random.random() < 0.1:  
                     height *= 1.5
                 
-                # Zwiększenie ogólnej wysokości terenu
+                # increasing the height of the terrain
                 self.height_map[i, j] = height * TERRAIN_HEIGHT * 1.5
         
         # Generate vertices and colors
@@ -49,29 +57,29 @@ class Terrain:
                 # Calculate color based on height, position and random pattern
                 height_factor = (y + TERRAIN_HEIGHT) / (2 * TERRAIN_HEIGHT)
                 
-                # Bazowe kolory piasku z większym kontrastem
+                # base colors of sand with higher contrast
                 sand_colors = [
-                    [0.90, 0.85, 0.65],  # Jasny, ciepły piasek
-                    [0.75, 0.55, 0.35],  # Ciemny, ciepły piasek
-                    [0.65, 0.60, 0.45],  # Szary piasek
-                    [0.85, 0.70, 0.40],  # Pomarańczowy piasek
-                    [0.70, 0.80, 0.60],  # Zielonkawy piasek
-                    [0.80, 0.60, 0.30],  # Czerwony piasek
+                    [0.90, 0.85, 0.65],  
+                    [0.75, 0.55, 0.35],  
+                    [0.65, 0.60, 0.45],  
+                    [0.85, 0.70, 0.40],  
+                    [0.70, 0.80, 0.60],  
+                    [0.80, 0.60, 0.30],  
                 ]
                 
-                # Wybór bazowego koloru z losową wariacją
+                # selection of the base color with random variation
                 base_color = random.choice(sand_colors)
-                variation = random.uniform(-0.2, 0.2)  # Zwiększona wariacja
+                variation = random.uniform(-0.2, 0.2)  
                 
-                # Dodanie gradientu wysokości i losowej wariacji
+                # adding gradient with random variation
                 color = [
-                    base_color[0] + (height_factor * 0.3) + variation,  # Zwiększony wpływ wysokości
+                    base_color[0] + (height_factor * 0.3) + variation,  
                     base_color[1] + (height_factor * 0.25) + variation,
                     base_color[2] + (height_factor * 0.2) + variation,
                     1.0
                 ]
                 
-                # Ograniczenie wartości kolorów do zakresu [0, 1]
+                # reducing the color values to the range [0, 1]
                 color = [max(0, min(1, c)) for c in color]
                 self.colors.extend(color)
         

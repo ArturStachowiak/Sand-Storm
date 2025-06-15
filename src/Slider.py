@@ -3,22 +3,29 @@ import pygame
 from OpenGL.GL import *
 from src.consts import *
 
+"""
+This is a class describing the slider.
+It is used to:
+- draw the slider
+- update the slider value
+- handle the slider events
+"""
 class Slider:
     def __init__(self, x, y, width, height, min_val, max_val, initial_val, is_count_slider=False, is_color_slider=False, is_wind_slider=False, is_sky_rgb=False):
         self.x = x
         self.y = y
         self.width = width
-        self.height = 4  # Zmniejszona wysokość toru slidera
+        self.height = 4  
         self.min_val = min_val
         self.max_val = max_val
         self.value = initial_val
         self.dragging = False
-        self.knob_size = 12  # Zmniejszony rozmiar uchwytu
+        self.knob_size = 12  
         self.is_count_slider = is_count_slider
         self.is_color_slider = is_color_slider
         self.is_wind_slider = is_wind_slider
         self.is_sky_rgb = is_sky_rgb
-        self.sand_storm = None  # Reference to SandStorm instance
+        self.sand_storm = None  
         
     def set_sand_storm(self, sand_storm):
         self.sand_storm = sand_storm
@@ -84,12 +91,12 @@ class Slider:
         # Draw slider knob last to ensure it's on top
         knob_x = self.x + (self.value - self.min_val) / (self.max_val - self.min_val) * self.width
         glBegin(GL_QUADS)
-        glColor3f(0.4, 0.4, 0.4)  # Jaśniejszy kolor uchwytu
+        glColor3f(0.4, 0.4, 0.4)  
         
-        # Dodajemy małe przesunięcie w górę dla lepszej widoczności
+        
         knob_y_offset = 2
         
-        # Rysujemy uchwyt wyżej niż tor slidera
+        
         glVertex2f(knob_x - self.knob_size/2, self.y - self.knob_size/2 + knob_y_offset)
         glVertex2f(knob_x + self.knob_size/2, self.y - self.knob_size/2 + knob_y_offset)
         glVertex2f(knob_x + self.knob_size/2, self.y + self.height + self.knob_size/2 + knob_y_offset)
